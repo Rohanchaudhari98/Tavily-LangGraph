@@ -1,87 +1,86 @@
 """
-Shared state definition for the multi-agent system.
+State Definition for Competitive Intelligence Workflow.
 
-This state is passed between all agents and contains:
-- Input data (query, competitors)
-- Intermediate results from each agent
-- Metadata (progress, errors)
+This defines the shared state that flows between agents.
+Each agent reads from and writes to this state.
 """
 
-from typing import TypedDict, List, Dict, Optional, Annotated
+from typing import TypedDict, List, Dict, Optional
 from datetime import datetime
-from langgraph.graph.message import add_messages
 
-class AgentState(TypedDict):
+
+class CompetitiveIntelligenceState(TypedDict):
     """
-    State dictionary shared across all agents in the workflow.
+    Shared state for the competitive intelligence workflow.
     
-    TypedDict provides type hints but allows dynamic updates.
-    Each agent can read from and write to this state.
+    This state object is passed between all agents and contains:
+    - Input parameters (query, company, competitors)
+    - Outputs from each agent
+    - Workflow metadata
     """
     
-    # ===== INPUT DATA =====
-    # These are set at the start and don't change
-    query: str  # e.g., "What is their pricing strategy?"
-    company_name: str  # e.g., "Acme Corp"
-    competitors: List[str]  # e.g., ["CompanyA", "CompanyB"]
+    # ===== INPUT PARAMETERS =====
+    query: str
+    """The research query (e.g., 'pricing strategy and features')"""
+    
+    company_name: str
+    """The company conducting the analysis (e.g., 'Tavily')"""
+    
+    competitors: List[str]
+    """List of competitor names to analyze (e.g., ['Perplexity AI', 'You.com'])"""
     
     # ===== AGENT OUTPUTS =====
-    # Each agent populates its section
-    research_results: List[Dict]  # From ResearchAgent (Tavily Search)
-    extracted_data: List[Dict]   # From ExtractionAgent (Tavily Extract)
-    crawl_results: List[Dict]    # From CrawlAgent (Tavily Crawl)
-    analysis: Optional[str]      # From AnalysisAgent (GPT-4 synthesis)
-    verification_status: Dict    # From VerificationAgent
+    research_results: List[Dict]
+    """
+    Output from Research Agent.
+    Each dict contains:
+    - competitor: str
+    - status: str ('success' or 'error')
+    - results: List[Dict] (search results)
+    - answer: str (AI-generated summary)
+    """
     
-    # ===== MESSAGES =====
-    # LangGraph special: tracks conversation history
-    # add_messages is a reducer that appends new messages
-    messages: Annotated[List[Dict], add_messages]
+    extracted_data: List[Dict]
+    """
+    Output from Extraction Agent.
+    Each dict contains:
+    - competitor: str
+    - url: str
+    - status: str
+    - raw_content: str (extracted text)
+    - content_length: int
+    """
+    
+    crawl_results: List[Dict]
+    """
+    Output from Crawl Agent.
+    Each dict contains:
+    - competitor: str
+    - pages_crawled: int
+    - urls_found: List[str]
+    - combined_content: str
+    - status: str
+    """
+    
+    analysis: Optional[str]
+    """
+    Output from Analysis Agent.
+    Comprehensive competitive intelligence report (markdown format).
+    """
     
     # ===== WORKFLOW METADATA =====
-    current_step: str  # e.g., "research_complete", "analyzing"
-    completed_agents: List[str]  # e.g., ["research", "extract"]
-    errors: List[str]  # Any errors encountered
-    next_agent: Optional[str]  # Which agent to run next
+    current_step: str
+    """Current step in the workflow (e.g., 'research', 'extraction')"""
+    
+    completed_agents: List[str]
+    """List of agents that have completed execution"""
+    
+    errors: List[str]
+    """List of error messages encountered during execution"""
     
     # ===== TIMESTAMPS =====
     started_at: datetime
-    updated_at: datetime
-
-
-def create_initial_state(
-    query: str,
-    company_name: str,
-    competitors: List[str]
-) -> AgentState:
-    """
-    Factory function to create initial state.
+    """When the workflow started"""
     
-    This ensures we always start with a valid state structure.
-    """
-    return {
-        # Input
-        "query": query,
-        "company_name": company_name,
-        "competitors": competitors,
-        
-        # Empty outputs
-        "research_results": [],
-        "extracted_data": [],
-        "crawl_results": [],
-        "analysis": None,
-        "verification_status": {},
-        
-        # Empty messages
-        "messages": [],
-        
-        # Workflow tracking
-        "current_step": "initialized",
-        "completed_agents": [],
-        "errors": [],
-        "next_agent": "research",  # Start with research
-        
-        # Timestamps
-        "started_at": datetime.now(),
-        "updated_at": datetime.now()
-    }
+    updated_at: datetime
+    """Last update timestamp"""

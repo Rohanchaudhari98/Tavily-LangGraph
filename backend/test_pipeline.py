@@ -12,7 +12,7 @@ from app.config import settings
 
 async def test_complete_pipeline(
     competitors: list[str],
-    query: str = "pricing strategy and features",
+    query: str = "AI search API pricing, features, and developer experience",
     use_premium_analysis: bool = False
 ):
     """

@@ -12,6 +12,7 @@ from typing import Dict, List
 from datetime import datetime
 import logging
 import json
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -202,56 +203,61 @@ class AnalysisAgent:
         """
         system_prompt = """You are a competitive intelligence analyst. 
         
-Your job is to analyze competitor data and provide actionable insights.
+    Your job is to analyze competitor data and provide actionable insights.
 
-Format your analysis in clear sections:
+    Format your analysis in clear sections:
 
-1. EXECUTIVE SUMMARY
-   - Key takeaways in 2-3 sentences
+    1. EXECUTIVE SUMMARY
+    - Key takeaways in 2-3 sentences
 
-2. PRICING COMPARISON
-   - Compare pricing models
-   - Identify pricing strategies
-   - Note any special offers or tiers
+    2. PRICING COMPARISON
+    - Compare pricing models
+    - Identify pricing strategies
+    - Note any special offers or tiers
 
-3. FEATURE ANALYSIS
-   - Compare key features
-   - Identify unique capabilities
-   - Note feature gaps
+    3. FEATURE ANALYSIS
+    - Compare key features
+    - Identify unique capabilities
+    - Note feature gaps
 
-4. MARKET POSITIONING
-   - How each competitor positions themselves
-   - Target customer segments
-   - Value propositions
+    4. MARKET POSITIONING
+    - How each competitor positions themselves
+    - Target customer segments
+    - Value propositions
 
-5. STRATEGIC RECOMMENDATIONS
-   - Opportunities identified
-   - Competitive advantages to leverage
-   - Areas for differentiation
+    5. STRATEGIC RECOMMENDATIONS
+    - Opportunities identified
+    - Competitive advantages to leverage
+    - Areas for differentiation
 
-Be specific, data-driven, and actionable. Use bullet points for clarity."""
+    Be specific, data-driven, and actionable. Use bullet points for clarity."""
 
         user_prompt = f"""Analyze the following competitive intelligence data:
 
-QUERY: {query}
-COMPETITORS: {', '.join(competitors)}
+    QUERY: {query}
+    COMPETITORS: {', '.join(competitors)}
 
-DATA:
-{context}
+    DATA:
+    {context}
 
-Provide a comprehensive competitive analysis following the format in your system prompt."""
+    Provide a comprehensive competitive analysis following the format in your system prompt."""
 
         logger.info(f"🤖 Calling {self.model}...")
         
-        # Call OpenAI API synchronously (we're already in async context)
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.3,  # Lower temperature for more focused analysis
-            max_tokens=2000
+        # OpenAI client is synchronous, wrap in executor for async
+        loop = asyncio.get_event_loop()
+        
+        response = await loop.run_in_executor(
+            None,
+            lambda: self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.3,  # Lower temperature for more focused analysis
+                max_tokens=2000
+            )
         )
         
         analysis = response.choices[0].message.content
@@ -259,7 +265,7 @@ Provide a comprehensive competitive analysis following the format in your system
         # Log token usage for monitoring
         usage = response.usage
         logger.info(f"📊 Token usage: {usage.total_tokens} total "
-                   f"({usage.prompt_tokens} prompt + {usage.completion_tokens} completion)")
+                f"({usage.prompt_tokens} prompt + {usage.completion_tokens} completion)")
         
         # Calculate approximate cost
         if self.use_premium:
