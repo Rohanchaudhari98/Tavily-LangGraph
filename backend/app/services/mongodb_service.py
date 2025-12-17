@@ -1,14 +1,14 @@
 """
 MongoDB Service - Handles all database operations.
 
-Uses Motor (async MongoDB driver) to store and retrieve:
+Uses async PyMongo driver to store and retrieve:
 - User queries
 - Agent outputs
 - Analysis results
 - Workflow metadata
 """
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from pymongo.errors import ConnectionFailure
 from bson import ObjectId
 from typing import List, Dict, Optional
@@ -38,7 +38,7 @@ class MongoDBService:
         self.database_name = database_name
         
         # Create async MongoDB client
-        self.client = AsyncIOMotorClient(connection_string)
+        self.client = AsyncMongoClient(connection_string)
         self.db = self.client[database_name]
         
         # Collections
@@ -230,7 +230,7 @@ class MongoDBService:
         
         Call this when shutting down the application.
         """
-        self.client.close()
+        await self.client.close()
         logger.info("MongoDB connection closed")
     
     def __repr__(self):

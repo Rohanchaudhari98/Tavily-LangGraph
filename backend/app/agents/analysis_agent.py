@@ -5,6 +5,7 @@ This agent:
 1. Takes research results and extracted content
 2. Analyzes pricing, features, positioning
 3. Generates strategic insights and recommendations
+4. Handles flexible queries with "Additional Insights" section
 """
 
 from openai import OpenAI
@@ -24,6 +25,7 @@ class AnalysisAgent:
     - Pricing comparison
     - Feature analysis
     - Market positioning insights
+    - Additional insights (for non-standard queries)
     - Strategic recommendations
     
     Supports two analysis modes:
@@ -66,17 +68,19 @@ class AnalysisAgent:
         extracted_data = state.get("extracted_data", [])
         crawl_results = state.get("crawl_results", [])
         query = state.get("query", "")
+        company_name = state.get("company_name", "Your Company")
         competitors = state.get("competitors", [])
         
         logger.info(f"🧠 Analysis Agent starting...")
         logger.info(f"   Mode: {'PREMIUM (gpt-4o)' if self.use_premium else 'STANDARD (gpt-4o-mini)'}")
+        logger.info(f"   Company: {company_name}")
         logger.info(f"   Query: {query}")
         logger.info(f"   Competitors: {len(competitors)}")
         logger.info(f"   Research results: {len(research_results)}")
         logger.info(f"   Extracted pages: {len(extracted_data)}")
         
         # Validate we have data to analyze
-        if not research_results and not extracted_data:
+        if not research_results and not extracted_data and not crawl_results:
             logger.warning("⚠️  No data to analyze")
             return {
                 **state,
@@ -102,6 +106,7 @@ class AnalysisAgent:
             # Generate analysis using GPT-4
             analysis_result = await self._generate_analysis(
                 query,
+                company_name,
                 competitors,
                 analysis_context
             )
@@ -138,32 +143,45 @@ class AnalysisAgent:
     ) -> str:
         """
         Prepare context from all gathered data.
+        
+        Args:
+            query: User's query
+            competitors: List of competitors
+            research_results: Results from research agent
+            extracted_data: Results from extraction agent
+            crawl_results: Results from crawl agent
+            
+        Returns:
+            Formatted context string for analysis
         """
         context_parts = []
         
         # Add research summaries
-        context_parts.append("=== RESEARCH SUMMARIES ===\n")
-        for result in research_results:
-            if result.get("status") == "success":
-                competitor = result.get("competitor")
-                answer = result.get("answer", "")
-                context_parts.append(f"\n{competitor}:")
-                context_parts.append(f"{answer}\n")
+        if research_results:
+            context_parts.append("=== RESEARCH SUMMARIES ===\n")
+            for result in research_results:
+                if result.get("status") == "success":
+                    competitor = result.get("competitor")
+                    answer = result.get("answer", "")
+                    context_parts.append(f"\n{competitor}:")
+                    context_parts.append(f"{answer}\n")
         
         # Add extracted content
-        context_parts.append("\n=== EXTRACTED CONTENT ===\n")
-        for data in extracted_data:
-            if data.get("status") == "success":
-                competitor = data.get("competitor")
-                url = data.get("url")
-                content = data.get("raw_content", "")
-                
-                truncated_content = content[:2000]
-                if len(content) > 2000:
-                    truncated_content += "... [truncated]"
-                
-                context_parts.append(f"\n{competitor} - {url}:")
-                context_parts.append(f"{truncated_content}\n")
+        if extracted_data:
+            context_parts.append("\n=== EXTRACTED CONTENT ===\n")
+            for data in extracted_data:
+                if data.get("status") == "success":
+                    competitor = data.get("competitor")
+                    url = data.get("url")
+                    content = data.get("raw_content", "")
+                    
+                    # Truncate long content
+                    truncated_content = content[:2000]
+                    if len(content) > 2000:
+                        truncated_content += "... [truncated]"
+                    
+                    context_parts.append(f"\n{competitor} - {url}:")
+                    context_parts.append(f"{truncated_content}\n")
         
         # Add crawl results
         if crawl_results:
@@ -182,11 +200,12 @@ class AnalysisAgent:
                     context_parts.append(f"\n{competitor} - Deep Crawl ({pages_crawled} pages):")
                     context_parts.append(f"{truncated_content}\n")
         
-        return "\n".join(context_parts)
+        return "\n".join(context_parts) if context_parts else "No data available"
 
     async def _generate_analysis(
         self,
         query: str,
+        company_name: str,
         competitors: List[str],
         context: str
     ) -> str:
@@ -195,54 +214,107 @@ class AnalysisAgent:
         
         Args:
             query: User's query
+            company_name: Your company name
             competitors: List of competitors
             context: Prepared context with all data
             
         Returns:
-            Analysis text
+            Analysis text in markdown format
         """
-        system_prompt = """You are a competitive intelligence analyst. 
-        
-    Your job is to analyze competitor data and provide actionable insights.
+        system_prompt = f"""You are a competitive intelligence analyst working for {company_name}.
 
-    Format your analysis in clear sections:
+**USER'S SPECIFIC QUERY:** "{query}"
 
-    1. EXECUTIVE SUMMARY
-    - Key takeaways in 2-3 sentences
+**CRITICAL INSTRUCTIONS:** 
+- All analysis MUST be from {company_name}'s perspective
+- All strategic recommendations MUST be for {company_name}, NOT for the competitors
+- Your goal is to help {company_name} compete better against: {', '.join(competitors)}
+- Frame everything as advice TO {company_name} ABOUT their competitors
+- Address ALL aspects of the user's query, even if they don't fit standard categories
 
-    2. PRICING COMPARISON
-    - Compare pricing models
-    - Identify pricing strategies
-    - Note any special offers or tiers
+Create a comprehensive competitive intelligence report for {company_name} with these sections:
 
-    3. FEATURE ANALYSIS
-    - Compare key features
-    - Identify unique capabilities
-    - Note feature gaps
+**1. EXECUTIVE SUMMARY**
+   - Direct overview addressing the query: "{query}"
+   - Key insights about how competitors position themselves
+   - Main opportunities and threats for {company_name}
+   - High-level takeaways from the analysis
 
-    4. MARKET POSITIONING
-    - How each competitor positions themselves
-    - Target customer segments
-    - Value propositions
+**2. PRICING COMPARISON**
+   - How do competitors' pricing models compare?
+   - What pricing strategies are competitors using?
+   - What special offers or tiers do they have?
+   - What does this mean for {company_name}'s pricing strategy?
+   - How can {company_name} price competitively?
 
-    5. STRATEGIC RECOMMENDATIONS
-    - Opportunities identified
-    - Competitive advantages to leverage
-    - Areas for differentiation
+**3. FEATURE ANALYSIS**
+   - What features and capabilities do competitors offer?
+   - What unique capabilities do they have that stand out?
+   - What feature gaps exist that {company_name} could exploit?
+   - Where might {company_name} have potential advantages?
+   - How do competitor features align with customer needs?
 
-    Be specific, data-driven, and actionable. Use bullet points for clarity."""
+**4. MARKET POSITIONING**
+   - How do competitors position themselves in the market?
+   - What customer segments are they targeting?
+   - What value propositions are they using?
+   - How should {company_name} position itself to stand out?
+   - What differentiators should {company_name} emphasize?
 
-        user_prompt = f"""Analyze the following competitive intelligence data:
+**5. ADDITIONAL INSIGHTS** (ONLY include if query asks about topics not covered above)
+   - Topics that might require this section:
+     * Customer support quality and response times
+     * Partnerships, acquisitions, or strategic alliances
+     * Brand reputation and customer sentiment
+     * Company culture and hiring trends
+     * Technology stack or infrastructure
+     * Marketing strategies or campaigns
+     * Geographic presence or expansion plans
+     * Sustainability or social responsibility initiatives
+   - Address any unique aspects from the query: "{query}"
+   - Provide insights that don't fit neatly into pricing, features, or positioning
+   - **IMPORTANT:** Skip this section entirely if not needed for the query
 
-    QUERY: {query}
-    COMPETITORS: {', '.join(competitors)}
+**6. STRATEGIC RECOMMENDATIONS FOR {company_name}**
+   - Opportunities {company_name} should pursue based on competitor weaknesses
+   - Competitive advantages {company_name} should leverage
+   - Areas where {company_name} should differentiate itself from competitors
+   - Specific, actionable steps {company_name} should take to improve market position
+   - Short-term and long-term strategic moves
 
-    DATA:
-    {context}
+**FORMATTING RULES:**
+- Use clear markdown formatting with headers
+- Write in a professional, analytical tone
+- Be specific and data-driven when possible
+- Avoid generic advice - make it actionable for {company_name}
+- Keep the analysis focused on the query: "{query}"
 
-    Provide a comprehensive competitive analysis following the format in your system prompt."""
+**REMEMBER:** 
+- Write as if you're presenting TO {company_name}, not about them
+- Say "{company_name} should..." not "the competitor should..."
+- All recommendations are for {company_name}'s benefit
+- Every insight should help {company_name} compete better
+"""
 
-        logger.info(f"🤖 Calling {self.model}...")
+        user_prompt = f"""Analyze the following competitive intelligence data for {company_name}:
+
+**QUERY:** {query}
+
+**YOUR COMPANY:** {company_name}
+
+**COMPETITORS ANALYZED:** {', '.join(competitors)}
+
+**COMPETITIVE DATA:**
+{context}
+
+Provide a comprehensive competitive analysis following the structure in your system prompt. 
+Focus on answering the specific query "{query}" while providing strategic context that helps 
+{company_name} understand the competitive landscape and identify opportunities.
+
+Remember to skip section 5 (Additional Insights) if the query only asks about standard topics 
+like pricing, features, or positioning."""
+
+        logger.info(f"🤖 Calling {self.model} for {company_name}...")
         
         # OpenAI client is synchronous, wrap in executor for async
         loop = asyncio.get_event_loop()
@@ -256,7 +328,7 @@ class AnalysisAgent:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.3,  # Lower temperature for more focused analysis
-                max_tokens=2000
+                max_tokens=2500  # Increased to accommodate additional section
             )
         )
         
@@ -269,11 +341,15 @@ class AnalysisAgent:
         
         # Calculate approximate cost
         if self.use_premium:
-            # GPT-4o pricing (approximate)
-            cost = (usage.prompt_tokens * 0.000005) + (usage.completion_tokens * 0.000015)
+            # GPT-4o pricing (approximate as of 2024)
+            prompt_cost = usage.prompt_tokens * 0.000005  # $5 per 1M tokens
+            completion_cost = usage.completion_tokens * 0.000015  # $15 per 1M tokens
+            cost = prompt_cost + completion_cost
         else:
-            # GPT-4o-mini pricing (approximate)
-            cost = (usage.prompt_tokens * 0.00000015) + (usage.completion_tokens * 0.0000006)
+            # GPT-4o-mini pricing (approximate as of 2024)
+            prompt_cost = usage.prompt_tokens * 0.00000015  # $0.15 per 1M tokens
+            completion_cost = usage.completion_tokens * 0.0000006  # $0.60 per 1M tokens
+            cost = prompt_cost + completion_cost
         
         logger.info(f"💰 Estimated cost: ${cost:.4f}")
         
