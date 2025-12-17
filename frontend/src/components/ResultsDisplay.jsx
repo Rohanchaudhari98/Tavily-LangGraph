@@ -13,6 +13,22 @@ export default function ResultsDisplay({ queryData }) {
     );
   }
 
+  // Calculate total agents dynamically based on auto-discovery
+  const totalAgents = queryData.total_agents || (queryData.use_auto_discovery ? 5 : 4);
+  const completedAgentsCount = queryData.completed_agents?.length || 0;
+
+  // Helper function to format freshness display
+  const formatFreshness = (freshness) => {
+    const freshnessMap = {
+      'anytime': 'Anytime (All results)',
+      '1month': 'Past Month',
+      '3months': 'Past 3 Months',
+      '6months': 'Past 6 Months',
+      '1year': 'Past Year'
+    };
+    return freshnessMap[freshness] || 'Anytime';
+  };
+
   const renderStatus = () => {
     const statusConfig = {
       processing: {
@@ -106,7 +122,7 @@ export default function ResultsDisplay({ queryData }) {
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center hover:bg-white/15 transition-all">
               <div className="text-white/80 text-sm mb-1">Progress</div>
               <div className="text-lg font-semibold text-white">
-                {queryData.completed_agents?.length || 0}/4 agents
+                {completedAgentsCount}/{totalAgents} agents
               </div>
             </div>
           </div>
@@ -164,7 +180,7 @@ export default function ResultsDisplay({ queryData }) {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Analysis in progress...</h3>
                   <p className="text-gray-600 mb-4">
-                    This usually takes 20-30 seconds
+                    This usually takes {queryData.use_auto_discovery ? '30-40' : '20-30'} seconds
                   </p>
                   <div className="inline-flex items-center gap-2 text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
                     <span>✓</span>
@@ -249,10 +265,30 @@ export default function ResultsDisplay({ queryData }) {
                     <dt className="text-sm font-medium text-gray-600">Query ID:</dt>
                     <dd className="text-sm font-mono text-gray-900 bg-white px-3 py-1 rounded">{queryData.query_id}</dd>
                   </div>
+                  <div className="flex justify-between items-center py-2 border-b border-blue-200">
+                    <dt className="text-sm font-medium text-gray-600">Discovery Mode:</dt>
+                    <dd className="text-sm font-semibold text-gray-900">
+                      {queryData.use_auto_discovery ? '🔍 Auto-Discovery' : '📋 Manual Entry'}
+                    </dd>
+                  </div>
+                  {/* Freshness Filter Display */}
+                  <div className="flex justify-between items-center py-2 border-b border-blue-200">
+                    <dt className="text-sm font-medium text-gray-600">Freshness Filter:</dt>
+                    <dd className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      <span>🕒</span>
+                      {formatFreshness(queryData.freshness || 'anytime')}
+                    </dd>
+                  </div>
                   <div className="flex justify-between items-start py-2 border-b border-blue-200">
                     <dt className="text-sm font-medium text-gray-600">Competitors:</dt>
                     <dd className="text-sm text-gray-900 text-right">{queryData.competitors.join(', ')}</dd>
                   </div>
+                  {queryData.use_auto_discovery && queryData.company_info && (
+                    <div className="flex justify-between items-start py-2 border-b border-blue-200">
+                      <dt className="text-sm font-medium text-gray-600">Industry:</dt>
+                      <dd className="text-sm text-gray-900 text-right">{queryData.company_info.industry}</dd>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center py-2 border-b border-blue-200">
                     <dt className="text-sm font-medium text-gray-600">Created:</dt>
                     <dd className="text-sm text-gray-900">{new Date(queryData.created_at).toLocaleString()}</dd>
@@ -272,6 +308,10 @@ export default function ResultsDisplay({ queryData }) {
                   Processing Details
                 </h3>
                 <dl className="grid grid-cols-1 gap-4">
+                  <div className="flex justify-between items-center py-2 border-b border-green-200">
+                    <dt className="text-sm font-medium text-gray-600">Total Agents:</dt>
+                    <dd className="text-sm font-semibold text-gray-900">{totalAgents}</dd>
+                  </div>
                   <div className="flex justify-between items-center py-2 border-b border-green-200">
                     <dt className="text-sm font-medium text-gray-600">Completed Agents:</dt>
                     <dd className="text-sm font-semibold text-gray-900">{queryData.completed_agents?.join(', ') || 'None'}</dd>

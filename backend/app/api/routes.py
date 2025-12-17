@@ -14,6 +14,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Create router FIRST before using it
 router = APIRouter(prefix="/api", tags=["competitive-intelligence"])
 
 # Initialize MongoDB
@@ -34,7 +35,19 @@ async def create_query(
     The workflow runs in the background, so this returns immediately.
     """
     
-    logger.info(f"Received query: {request.query} for {request.company_name}")
+    # Validation: Must have either competitors OR auto-discovery enabled
+    if not request.use_auto_discovery and len(request.competitors) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide competitors OR enable auto-discovery"
+        )
+    
+    if request.use_auto_discovery:
+        logger.info(f"Auto-discovery query for {request.company_name} (max: {request.max_competitors})")
+    else:
+        logger.info(f"Manual query: {request.query} for {request.company_name}")
+    
+    logger.info(f"Freshness filter: {request.freshness}")
     
     # Generate unique ID
     query_id = db.generate_id()
@@ -46,11 +59,15 @@ async def create_query(
         "company_name": request.company_name,
         "competitors": request.competitors,
         "use_premium_analysis": request.use_premium_analysis,
+        "use_auto_discovery": request.use_auto_discovery,
+        "max_competitors": request.max_competitors,
+        "freshness": request.freshness,
         "status": "processing",
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
         "completed_at": None,
         "analysis": None,
+        "company_info": None,
         "research_results": [],
         "extracted_data": [],
         "crawl_results": [],
@@ -69,6 +86,9 @@ async def create_query(
         company_name=request.company_name,
         competitors=request.competitors,
         use_premium_analysis=request.use_premium_analysis,
+        use_auto_discovery=request.use_auto_discovery,
+        max_competitors=request.max_competitors,
+        freshness=request.freshness,
         tavily_api_key=settings.tavily_api_key,
         openai_api_key=settings.openai_api_key,
         db=db
@@ -76,10 +96,16 @@ async def create_query(
     
     logger.info(f"Background task started for query {query_id}")
     
+    # Different message based on mode
+    if request.use_auto_discovery:
+        message = f"Query submitted. AI will discover up to {request.max_competitors} competitors."
+    else:
+        message = f"Query submitted successfully. Analyzing {len(request.competitors)} competitors."
+    
     return QueryResponse(
         query_id=query_id,
         status="processing",
-        message=f"Query submitted successfully. Analyzing {len(request.competitors)} competitors.",
+        message=message,
         created_at=datetime.now()
     )
 
@@ -98,12 +124,17 @@ async def get_query(query_id: str):
         logger.warning(f"Query not found: {query_id}")
         raise HTTPException(status_code=404, detail="Query not found")
     
+    # Calculate total agents based on whether discovery was used
+    use_auto_discovery = query.get("use_auto_discovery", False)
+    total_agents = 5 if use_auto_discovery else 4
+    
     return QueryResult(
         query_id=query["_id"],
         status=query["status"],
         query=query["query"],
         company_name=query["company_name"],
         competitors=query["competitors"],
+        freshness=query.get("freshness", "anytime"),
         analysis=query.get("analysis"),
         research_results=query.get("research_results"),
         extracted_data=query.get("extracted_data"),
@@ -111,6 +142,9 @@ async def get_query(query_id: str):
         completed_agents=query.get("completed_agents", []),
         errors=query.get("errors", []),
         analysis_mode=query.get("analysis_mode"),
+        company_info=query.get("company_info"),
+        total_agents=total_agents,
+        use_auto_discovery=use_auto_discovery,
         created_at=query["created_at"],
         updated_at=query["updated_at"],
         completed_at=query.get("completed_at")

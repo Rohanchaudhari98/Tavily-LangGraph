@@ -3,9 +3,10 @@ Competitor Discovery Agent - Automatically identifies competitors.
 
 This agent:
 1. Takes a company name
-2. Uses GPT-4 to understand the company's domain
-3. Uses Tavily Search to find competitors
-4. Returns top 5 most relevant competitors
+2. Uses GPT-4 to understand the company's domain with precision
+3. Uses Tavily Search to find DIRECT competitors
+4. Filters out adjacent market players and non-competitors
+5. Returns top N most relevant competitors
 """
 
 from openai import OpenAI
@@ -21,9 +22,10 @@ class CompetitorDiscoveryAgent:
     """
     Automatically discovers competitors for a given company.
     
-    Uses a two-step approach:
-    1. GPT-4 to understand the company and generate search queries
-    2. Tavily Search to find actual competitors from the web
+    Uses a two-step approach with improved precision:
+    1. GPT-4 to understand the company's CORE BUSINESS and MARKET SEGMENT
+    2. Tavily Search to find actual DIRECT competitors from the web
+    3. GPT-4 to filter and validate competitor relevance
     """
     
     def __init__(self, tavily_api_key: str, openai_api_key: str):
@@ -43,15 +45,16 @@ class CompetitorDiscoveryAgent:
         Discover competitors for the given company.
         
         Args:
-            state: Workflow state with company_name
+            state: Workflow state with company_name and max_competitors
             
         Returns:
             Updated state with competitors list populated
         """
         company_name = state.get("company_name")
+        max_competitors = state.get("max_competitors", 5)
         
         if not company_name:
-            logger.error("❌ No company name provided")
+            logger.error("No company name provided")
             return {
                 **state,
                 "competitors": [],
@@ -59,22 +62,27 @@ class CompetitorDiscoveryAgent:
                 "completed_agents": state.get("completed_agents", []) + [self.name]
             }
         
-        logger.info(f"🔍 Competitor Discovery Agent starting for: {company_name}")
+        logger.info(f"Competitor Discovery Agent starting for: {company_name}")
+        logger.info(f"Target: Find up to {max_competitors} direct competitors")
         
         try:
-            # Step 1: Understand the company using GPT-4
+            # Step 1: Understand the company using GPT-4 with precision
             company_info = await self._understand_company(company_name)
             
-            logger.info(f"📊 Company identified as: {company_info['industry']}")
-            logger.info(f"💡 Description: {company_info['description'][:100]}...")
+            logger.info(f"Company analysis complete:")
+            logger.info(f"  Market Segment: {company_info['market_segment']}")
+            logger.info(f"  Primary Business: {company_info['primary_business']}")
+            logger.info(f"  Target Customer: {company_info['target_customer']}")
             
             # Step 2: Find competitors using Tavily Search
             competitors = await self._find_competitors(
                 company_name, 
-                company_info
+                company_info,
+                max_competitors=max_competitors
             )
             
-            logger.info(f"✅ Found {len(competitors)} competitors: {', '.join(competitors)}")
+            logger.info(f"Discovery complete: Found {len(competitors)} competitors")
+            logger.info(f"Competitors: {', '.join(competitors)}")
             
             return {
                 **state,
@@ -86,7 +94,7 @@ class CompetitorDiscoveryAgent:
             }
             
         except Exception as e:
-            logger.error(f"❌ Competitor discovery failed: {str(e)}")
+            logger.error(f"Competitor discovery failed: {str(e)}")
             return {
                 **state,
                 "competitors": [],
@@ -97,43 +105,65 @@ class CompetitorDiscoveryAgent:
     
     async def _understand_company(self, company_name: str) -> Dict:
         """
-        Use GPT-4 to understand what the company does.
+        Use GPT-4 to understand what the company does with precision.
         
         Args:
             company_name: Name of the company
             
         Returns:
-            Dictionary with industry, description, and keywords
+            Dictionary with detailed company profile
         """
-        logger.info(f"🤖 Asking GPT-4 about {company_name}...")
+        logger.info(f"Analyzing {company_name} with GPT-4...")
         
-        prompt = f"""Analyze the company "{company_name}" and provide:
-1. Industry/sector
-2. Brief description (1-2 sentences)
-3. Key search terms to find competitors
+        prompt = f"""You are a business analyst expert. Analyze "{company_name}" precisely.
 
-Respond in JSON format:
+Your goal: Identify the CORE BUSINESS and PRIMARY MARKET SEGMENT, not just the broad industry.
+
+Examples of precision:
+- Bad: "Stripe is in fintech" (too broad)
+- Good: "Stripe is a payment processing API for online merchants"
+
+- Bad: "Slack is in SaaS"
+- Good: "Slack is a team messaging and collaboration platform"
+
+For {company_name}, provide:
+
+1. **Primary Business Model**: What do they actually sell? (e.g., "API-based payment processing", "cloud storage", "CRM software")
+
+2. **Target Customer**: Who buys from them? (e.g., "e-commerce businesses", "enterprise teams", "developers")
+
+3. **Core Value Proposition**: What problem do they solve? (one sentence)
+
+4. **Market Segment**: Specific niche, not broad industry (e.g., "payment gateways for online merchants" not "fintech")
+
+5. **Competitor Search Terms**: 3-5 highly specific search terms that would find DIRECT competitors (companies selling the same thing to the same customers)
+
+Respond in JSON:
 {{
-    "industry": "specific industry",
-    "description": "what the company does",
-    "search_terms": ["term1", "term2", "term3"]
-}}"""
+    "primary_business": "what they sell",
+    "target_customer": "who buys it",
+    "value_proposition": "problem they solve",
+    "market_segment": "specific niche",
+    "search_terms": ["specific term 1", "specific term 2", "specific term 3"]
+}}
+
+Be extremely specific. Avoid generic industry terms."""
 
         response = self.openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system", 
-                    "content": "You are a business analyst expert at identifying companies and their markets. Always respond with valid JSON."
+                    "content": "You are a business analyst who identifies companies with surgical precision. You focus on CORE BUSINESS and PRIMARY MARKET, not tangential services or broad industries. Always respond with valid JSON."
                 },
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
+            temperature=0.2,
             response_format={"type": "json_object"}
         )
         
         result = json.loads(response.choices[0].message.content)
-        logger.info(f"📊 Token usage: {response.usage.total_tokens} tokens")
+        logger.info(f"Token usage: {response.usage.total_tokens} tokens")
         
         return result
     
@@ -144,7 +174,7 @@ Respond in JSON format:
         max_competitors: int = 5
     ) -> List[str]:
         """
-        Find competitors using Tavily Search.
+        Find competitors using Tavily Search with improved targeting.
         
         Args:
             company_name: Name of the company
@@ -156,18 +186,24 @@ Respond in JSON format:
         """
         competitors = set()
         
-        # Generate search queries
+        # Generate more targeted search queries
         search_queries = [
-            f"{company_name} competitors",
-            f"{company_name} alternatives",
-            f"best {company_info['industry']} companies",
-            f"{company_info['industry']} market leaders",
-            f"companies like {company_name}"
+            # Direct competitor searches
+            f"{company_name} vs competitors",
+            f"{company_name} alternatives comparison",
+            f"best {company_info['market_segment']} companies",
+            
+            # Market segment searches
+            f"top {company_info['primary_business']} providers",
+            f"{company_info['market_segment']} market leaders",
+            
+            # Customer perspective
+            f"alternatives to {company_name} for {company_info['target_customer']}"
         ]
         
-        # Search for competitors
-        for query in search_queries[:3]:  # Use top 3 queries to save API calls
-            logger.info(f"🔎 Searching: {query}")
+        # Use the most relevant queries
+        for query in search_queries[:4]:  # Use top 4 queries
+            logger.info(f"Searching: {query}")
             
             try:
                 # Use Tavily Search
@@ -192,27 +228,25 @@ Respond in JSON format:
                 
                 competitors.update(found)
                 
-                # Stop if we have enough
-                if len(competitors) >= max_competitors * 2:
+                # Stop if we have enough high-quality competitors
+                if len(competitors) >= max_competitors * 1.5:
                     break
                     
             except Exception as e:
-                logger.warning(f"⚠️  Search failed for '{query}': {str(e)}")
+                logger.warning(f"Search failed for '{query}': {str(e)}")
         
-        # If search didn't find enough, use GPT-4 as fallback
+        # If not enough found, use GPT-4 fallback
         if len(competitors) < max_competitors:
-            logger.info("🤖 Using GPT-4 fallback to find more competitors...")
+            logger.info(f"Only found {len(competitors)}, using GPT-4 to supplement...")
             gpt_competitors = await self._get_competitors_from_gpt(
                 company_name,
-                company_info
+                company_info,
+                count=max_competitors - len(competitors) + 2
             )
             competitors.update(gpt_competitors)
         
-        # Convert to list and take top N
-        competitor_list = list(competitors)
-        
-        # Remove the company itself if it appears
-        competitor_list = [c for c in competitor_list if c.lower() != company_name.lower()]
+        # Convert to list and remove the company itself
+        competitor_list = [c for c in list(competitors) if c.lower() != company_name.lower()]
         
         # Return top N
         return competitor_list[:max_competitors]
@@ -224,33 +258,51 @@ Respond in JSON format:
         company_info: Dict
     ) -> List[str]:
         """
-        Extract competitor names from Tavily search results.
+        Extract competitor names from Tavily search results with strict filtering.
         
         Uses GPT-4 to intelligently parse the search results and
-        identify actual company names.
+        identify DIRECT competitors only.
         """
         # Get the AI answer and top results
         answer = search_response.get("answer", "")
         results = search_response.get("results", [])
         
         # Combine answer and result snippets
-        context = f"Answer: {answer}\n\n"
-        for result in results[:3]:
-            context += f"- {result.get('content', '')}\n"
+        context = f"Search Answer: {answer}\n\n"
+        for result in results[:5]:  # Increased from 3 to 5 for more context
+            context += f"Source: {result.get('title', '')}\n"
+            context += f"Content: {result.get('content', '')}\n\n"
         
-        # Ask GPT-4 to extract company names
-        prompt = f"""From this text about {company_name} competitors in the {company_info['industry']} industry, extract ONLY the competitor company names.
+        # Improved extraction prompt
+        prompt = f"""You are analyzing search results to find DIRECT competitors of {company_name}.
 
-Text:
+Company Profile:
+- Business: {company_info['primary_business']}
+- Market: {company_info['market_segment']}
+- Customers: {company_info['target_customer']}
+
+Search Results:
 {context}
 
-Return a JSON array of company names (max 5):
-{{"competitors": ["Company1", "Company2", ...]}}
+Task: Extract company names that are DIRECT competitors (selling similar products/services to similar customers).
 
-Rules:
-- Only include actual company names, not products or services
-- Exclude {company_name} itself
-- Use official company names (e.g., "Stripe" not "Stripe Inc.")"""
+STRICT RULES:
+1. Only include companies that compete in the SAME market segment
+2. Exclude companies that:
+   - Operate in adjacent/different markets
+   - Are partners/vendors rather than competitors
+   - Are customers of {company_name}
+   - Offer complementary (not competing) services
+3. Exclude {company_name} itself
+4. Use official company names (e.g., "Stripe" not "Stripe Inc.")
+5. Maximum 5 companies
+
+Examples:
+- If analyzing Stripe (payment processing), include: Square, Adyen, Checkout.com
+- If analyzing Stripe, exclude: Brex (corporate cards), Plaid (bank connectivity), QuickBooks (accounting)
+
+Return ONLY direct competitors as JSON:
+{{"competitors": ["Company1", "Company2", ...]}}"""
 
         try:
             response = self.openai_client.chat.completions.create(
@@ -258,19 +310,22 @@ Rules:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You extract company names from text. Always respond with valid JSON."
+                        "content": "You are a competitive intelligence analyst who identifies DIRECT competitors with precision. You understand the difference between direct competitors, adjacent market players, partners, and complementary services. Always respond with valid JSON."
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0,
+                temperature=0.1,  # Very low for consistent, focused results
                 response_format={"type": "json_object"}
             )
             
             result = json.loads(response.choices[0].message.content)
-            return result.get("competitors", [])
+            competitors = result.get("competitors", [])
+            
+            logger.info(f"Extracted {len(competitors)} direct competitors from search")
+            return competitors
             
         except Exception as e:
-            logger.warning(f"⚠️  GPT-4 extraction failed: {str(e)}")
+            logger.warning(f"GPT-4 extraction failed: {str(e)}")
             return []
     
     async def _get_competitors_from_gpt(
@@ -284,14 +339,37 @@ Rules:
         
         This is used when web search doesn't find enough competitors.
         """
-        prompt = f"""List the top {count} competitors of {company_name} in the {company_info['industry']} industry.
+        prompt = f"""You are a competitive intelligence expert with deep market knowledge.
 
-Company description: {company_info['description']}
+List the top {count} DIRECT competitors of {company_name}.
 
-Return a JSON array of company names:
+Company Profile:
+- Business: {company_info['primary_business']}
+- Market: {company_info['market_segment']}
+- Customers: {company_info['target_customer']}
+- Value Prop: {company_info['value_proposition']}
+
+Requirements:
+1. ONLY include companies that:
+   - Sell similar products/services
+   - Target the same customer segment
+   - Compete directly for the same deals
+   
+2. EXCLUDE companies that:
+   - Operate in adjacent markets
+   - Are partners/ecosystem players
+   - Serve different customer segments
+   - Offer complementary (not competing) products
+
+3. Prioritize:
+   - Well-known, established competitors
+   - Companies with similar business models
+   - Direct market overlap
+
+Return JSON with ONLY direct competitors:
 {{"competitors": ["Company1", "Company2", ...]}}
 
-Only include real, well-known competitors."""
+Be selective. Quality over quantity."""
 
         try:
             response = self.openai_client.chat.completions.create(
@@ -299,19 +377,22 @@ Only include real, well-known competitors."""
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a business analyst with deep knowledge of competitive landscapes. Always respond with valid JSON."
+                        "content": "You are a competitive analyst who understands market segmentation and competitive dynamics. You distinguish between direct competitors, indirect competitors, partners, and complementary services. Focus on DIRECT competition only. Always respond with valid JSON."
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3,
+                temperature=0.2,
                 response_format={"type": "json_object"}
             )
             
             result = json.loads(response.choices[0].message.content)
-            return result.get("competitors", [])
+            competitors = result.get("competitors", [])
+            
+            logger.info(f"GPT-4 suggested {len(competitors)} competitors")
+            return competitors
             
         except Exception as e:
-            logger.error(f"❌ GPT-4 fallback failed: {str(e)}")
+            logger.error(f"GPT-4 fallback failed: {str(e)}")
             return []
     
     def __repr__(self):

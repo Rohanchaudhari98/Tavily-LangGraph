@@ -5,7 +5,7 @@ This defines the shared state that flows between agents.
 Each agent reads from and writes to this state.
 """
 
-from typing import TypedDict, List, Dict, Optional
+from typing import TypedDict, List, Dict, Optional, Literal
 from datetime import datetime
 
 
@@ -27,7 +27,23 @@ class CompetitiveIntelligenceState(TypedDict):
     """The company conducting the analysis (e.g., 'Tavily')"""
     
     competitors: List[str]
-    """List of competitor names to analyze (e.g., ['Perplexity AI', 'You.com'])"""
+    """List of competitor names to analyze (populated by discovery or manual entry)"""
+    
+    use_auto_discovery: bool
+    """Whether to use AI to automatically discover competitors"""
+    
+    max_competitors: int
+    """Maximum number of competitors to discover (used by discovery agent)"""
+    
+    company_info: Optional[Dict]
+    """
+    Information about the company from discovery agent.
+    Contains: industry, description, search_terms
+    """
+    
+    # Freshness filter
+    freshness: str
+    """Time range for search results: anytime, 1month, 3months, 6months, 1year"""
     
     # ===== AGENT OUTPUTS =====
     research_results: List[Dict]
@@ -70,7 +86,7 @@ class CompetitiveIntelligenceState(TypedDict):
     
     # ===== WORKFLOW METADATA =====
     current_step: str
-    """Current step in the workflow (e.g., 'research', 'extraction')"""
+    """Current step in the workflow (e.g., 'discovery', 'research', 'extraction')"""
     
     completed_agents: List[str]
     """List of agents that have completed execution"""
