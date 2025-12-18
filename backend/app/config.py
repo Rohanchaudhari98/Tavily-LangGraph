@@ -1,40 +1,32 @@
-"""
-Configuration management using Pydantic Settings.
-This loads environment variables and provides type-safe config access.
-"""
-
 from pydantic_settings import BaseSettings
-from typing import List
-
+from typing import List, Optional
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables"""
-    
-    # API Keys
-    tavily_api_key: str
-    openai_api_key: str
-    
-    # MongoDB
-    mongodb_uri: str
+    tavily_api_key: Optional[str]
+    openai_api_key: Optional[str]
+    mongodb_uri: Optional[str]
     mongodb_db_name: str = "competitive_intelligence"
-    
-    # App Config
-    environment: str = "development"
-    debug: bool = True
+
+    environment: str = "production"
+    debug: bool = False
     log_level: str = "INFO"
-    
-    # API Config
+
     api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    
-    # CORS - Allow frontend to connect
+    api_port: int = 8080
+
     frontend_url: str = "http://localhost:5173"
-    cors_origins: List[str] = ["http://localhost:5173", "http://localhost:3000"]
-    
+    cors_origins: List[str] = []
+
     class Config:
-        env_file = ".env"
+        env_file = ".env"  # EB can override with environment variables
         case_sensitive = False
+        env_prefix = ""
 
+    # Convert comma-separated string to list
+    @property
+    def cors_origins_list(self) -> List[str]:
+        if isinstance(self.cors_origins, str):
+            return [o.strip() for o in self.cors_origins.replace("[","").replace("]","").replace('"','').split(",")]
+        return self.cors_origins
 
-# Global settings instance
 settings = Settings()

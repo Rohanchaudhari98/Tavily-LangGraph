@@ -2,32 +2,39 @@
 API routes for the competitive intelligence system.
 """
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
 from typing import List
 from datetime import datetime
 import logging
 
 from .models import QueryRequest, QueryResponse, QueryResult, QueryListItem
 from app.services.mongodb_service import MongoDBService
+from app.services.mongodb_dependency import get_db
 from app.core.background import run_workflow_background
 from app.config import settings
+from app.utils.env import require_env
 
 logger = logging.getLogger(__name__)
 
 # Create router FIRST before using it
 router = APIRouter(prefix="/api", tags=["competitive-intelligence"])
 
-# Initialize MongoDB
-db = MongoDBService(
-    connection_string=settings.mongodb_uri,
-    database_name=settings.mongodb_db_name
-)
+# -----------------------------
+# Helper function for background task DB access
+# -----------------------------
+def get_db_for_background() -> MongoDBService:
+    """Get MongoDB client safely for background tasks."""
+    return get_db()
 
 
+# -----------------------------
+# Routes
+# -----------------------------
 @router.post("/queries", response_model=QueryResponse)
 async def create_query(
     request: QueryRequest,
-    background_tasks: BackgroundTasks
+    background_tasks: BackgroundTasks,
+    db: MongoDBService = Depends(get_db)
 ):
     """
     Submit a new competitive intelligence query.
@@ -78,6 +85,10 @@ async def create_query(
     await db.insert_query(query_doc)
     logger.info(f"Query saved with ID: {query_id}")
     
+    # Enforce env vars for background workflow
+    require_env("TAVILY_API_KEY", settings.tavily_api_key)
+    require_env("OPENAI_API_KEY", settings.openai_api_key)
+    
     # Start workflow in background
     background_tasks.add_task(
         run_workflow_background,
@@ -91,7 +102,7 @@ async def create_query(
         freshness=request.freshness,
         tavily_api_key=settings.tavily_api_key,
         openai_api_key=settings.openai_api_key,
-        db=db
+        db=get_db_for_background()  # lazy DB for background
     )
     
     logger.info(f"Background task started for query {query_id}")
@@ -111,7 +122,10 @@ async def create_query(
 
 
 @router.get("/queries/{query_id}", response_model=QueryResult)
-async def get_query(query_id: str):
+async def get_query(
+    query_id: str,
+    db: MongoDBService = Depends(get_db)
+):
     """
     Get the results for a specific query.
     """
@@ -154,7 +168,8 @@ async def get_query(query_id: str):
 @router.get("/queries", response_model=List[QueryListItem])
 async def list_queries(
     skip: int = 0,
-    limit: int = 20
+    limit: int = 20,
+    db: MongoDBService = Depends(get_db)
 ):
     """
     List all queries (most recent first).
@@ -178,7 +193,10 @@ async def list_queries(
 
 
 @router.delete("/queries/{query_id}")
-async def delete_query(query_id: str):
+async def delete_query(
+    query_id: str,
+    db: MongoDBService = Depends(get_db)
+):
     """
     Delete a query and its results.
     """

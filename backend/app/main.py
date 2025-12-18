@@ -26,18 +26,14 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# CORS middleware - Allow port 5173
+# CORS middleware - Allow all origins for AWS deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=3600,
 )
 
 # Include API routes
@@ -50,7 +46,8 @@ async def root():
     return {
         "message": "Competitive Intelligence API",
         "status": "healthy",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "environment": settings.environment
     }
 
 
