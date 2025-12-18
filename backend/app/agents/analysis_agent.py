@@ -6,7 +6,8 @@ This agent:
 2. Analyzes pricing, features, positioning
 3. Conducts strategic risk assessment
 4. Generates strategic insights and recommendations
-5. Handles flexible queries with "Additional Insights" section
+5. Extracts structured data for charts
+6. Handles flexible queries with "Additional Insights" section
 """
 
 from openai import OpenAI
@@ -29,6 +30,7 @@ class AnalysisAgent:
     - Risk analysis and threat assessment
     - Additional insights (for non-standard queries)
     - Strategic recommendations
+    - Structured chart data for visualization
     
     Supports two analysis modes:
     - Standard (gpt-4o-mini): Fast, cost-effective, good quality
@@ -64,7 +66,7 @@ class AnalysisAgent:
             state: Current workflow state with research_results and extracted_data
             
         Returns:
-            Updated state with analysis populated
+            Updated state with analysis and chart_data populated
         """
         research_results = state.get("research_results", [])
         extracted_data = state.get("extracted_data", [])
@@ -87,6 +89,7 @@ class AnalysisAgent:
             return {
                 **state,
                 "analysis": None,
+                "chart_data": None,
                 "errors": state.get("errors", []) + ["No data available for analysis"],
                 "current_step": "analysis_failed",
                 "completed_agents": state.get("completed_agents", []) + [self.name],
@@ -115,9 +118,17 @@ class AnalysisAgent:
             
             logger.info(f"✅ Analysis complete: {len(analysis_result)} characters")
             
+            # Extract chart data from analysis
+            chart_data = await self._extract_chart_data(
+                analysis_result,
+                company_name,
+                competitors
+            )
+            
             return {
                 **state,
                 "analysis": analysis_result,
+                "chart_data": chart_data,
                 "analysis_mode": "premium" if self.use_premium else "standard",
                 "current_step": "analysis_complete",
                 "completed_agents": state.get("completed_agents", []) + [self.name],
@@ -129,6 +140,7 @@ class AnalysisAgent:
             return {
                 **state,
                 "analysis": None,
+                "chart_data": None,
                 "errors": state.get("errors", []) + [f"Analysis error: {str(e)}"],
                 "current_step": "analysis_failed",
                 "completed_agents": state.get("completed_agents", []) + [self.name],
@@ -400,6 +412,173 @@ like pricing, features, positioning, or risks."""
         logger.info(f"💰 Estimated cost: ${cost:.4f}")
         
         return analysis
+    
+    async def _extract_chart_data(
+        self,
+        analysis: str,
+        company_name: str,
+        competitors: List[str]
+    ) -> Dict:
+        """
+        Extract structured chart data from the analysis text.
+        
+        Uses GPT to parse the analysis and extract:
+        - Pricing data for bar chart
+        - Feature scores for radar chart
+        - Risk data for risk matrix
+        
+        Args:
+            analysis: The markdown analysis text
+            company_name: Your company name
+            competitors: List of competitor names
+            
+        Returns:
+            Dictionary with chart data, or None if extraction fails
+        """
+        
+        if not competitors:
+            logger.warning("⚠️  No competitors to create charts for")
+            return None
+        
+        # Build competitors list for JSON template
+        comp_json_examples = []
+        for i, comp in enumerate(competitors[:3]):  # Limit to 3 for template
+            comp_json_examples.append(f'"{comp}": {7 + i}')
+        
+        competitors_json = ',\n            '.join(comp_json_examples)
+        
+        extraction_prompt = f"""Extract structured data from this competitive analysis for visualization charts.
+
+**ANALYSIS TEXT:**
+{analysis[:4000]}
+
+**YOUR TASK:**
+Parse the analysis and extract pricing, feature scores, and risk data. 
+Return ONLY valid JSON with no markdown formatting or explanation.
+
+**REQUIRED JSON STRUCTURE:**
+{{
+    "pricing": [
+        {{"company": "{company_name}", "price": 9.99}},
+        {{"company": "{competitors[0] if competitors else 'Competitor1'}", "price": 10.99}}
+    ],
+    "features": [
+        {{
+            "feature": "Content Quality",
+            "{company_name}": 8,
+            {competitors_json}
+        }},
+        {{
+            "feature": "Pricing",
+            "{company_name}": 7,
+            {competitors_json}
+        }},
+        {{
+            "feature": "User Experience",
+            "{company_name}": 9,
+            {competitors_json}
+        }},
+        {{
+            "feature": "Innovation",
+            "{company_name}": 8,
+            {competitors_json}
+        }},
+        {{
+            "feature": "Market Reach",
+            "{company_name}": 9,
+            {competitors_json}
+        }}
+    ],
+    "risks": [
+        {{"risk": "Price Sensitivity", "impact": 8, "likelihood": 9}},
+        {{"risk": "Content Competition", "impact": 9, "likelihood": 8}}
+    ]
+}}
+
+**EXTRACTION RULES:**
+1. **Pricing**: Extract from "PRICING COMPARISON" section
+   - Use base/standard tier monthly price in USD
+   - If price ranges given (e.g., "$9.99-$22.99"), use the lowest tier
+   - If no exact price, estimate based on tier descriptions
+   
+2. **Features**: Score 0-10 based on analysis (10=excellent, 0=poor)
+   - Extract 5 key features mentioned in "FEATURE ANALYSIS" section
+   - Score {company_name} and all competitors on each feature
+   - Features might include: Content Quality, Pricing, User Experience, Innovation, Market Reach, etc.
+   
+3. **Risks**: Extract from "RISK ANALYSIS" section
+   - Get top 3-5 critical risks mentioned
+   - Impact & Likelihood: Convert High=9, Medium=6, Low=3
+   - If exact scores not stated, estimate based on risk description
+
+**IMPORTANT:**
+- Return ONLY the JSON object
+- No markdown code blocks
+- No explanations before or after
+- Ensure all JSON is valid (proper quotes, commas, brackets)
+
+Return the JSON now:"""
+
+        try:
+            logger.info("📊 Extracting chart data from analysis...")
+            
+            loop = asyncio.get_event_loop()
+            
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.client.chat.completions.create(
+                    model="gpt-4o-mini",  # Use mini for cost efficiency
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a data extraction expert. Extract structured data and return ONLY valid JSON."
+                        },
+                        {
+                            "role": "user",
+                            "content": extraction_prompt
+                        }
+                    ],
+                    temperature=0.1,  # Very low for consistent extraction
+                    max_tokens=1500
+                )
+            )
+            
+            chart_data_str = response.choices[0].message.content.strip()
+            
+            # Remove markdown code blocks if present
+            if chart_data_str.startswith("```"):
+                lines = chart_data_str.split("\n")
+                chart_data_str = "\n".join(lines[1:-1]) if len(lines) > 2 else chart_data_str
+                if chart_data_str.startswith("json"):
+                    chart_data_str = chart_data_str[4:]
+            
+            chart_data_str = chart_data_str.strip()
+            
+            # Parse JSON
+            chart_data = json.loads(chart_data_str)
+            
+            # Validate structure
+            if not isinstance(chart_data.get('pricing'), list):
+                raise ValueError("Invalid pricing data structure")
+            if not isinstance(chart_data.get('features'), list):
+                raise ValueError("Invalid features data structure")
+            if not isinstance(chart_data.get('risks'), list):
+                raise ValueError("Invalid risks data structure")
+            
+            logger.info(f"✅ Chart data extracted: {len(chart_data.get('pricing', []))} pricing points, "
+                       f"{len(chart_data.get('features', []))} features, "
+                       f"{len(chart_data.get('risks', []))} risks")
+            
+            return chart_data
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ Failed to parse chart data JSON: {str(e)}")
+            logger.error(f"Raw response: {chart_data_str[:200]}...")
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Chart data extraction failed: {str(e)}")
+            return None
     
     def __repr__(self):
         mode = "premium" if self.use_premium else "standard"

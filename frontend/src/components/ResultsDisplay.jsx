@@ -283,12 +283,6 @@ export default function ResultsDisplay({ queryData }) {
                     <dt className="text-sm font-medium text-gray-600">Competitors:</dt>
                     <dd className="text-sm text-gray-900 text-right">{queryData.competitors.join(', ')}</dd>
                   </div>
-                  {queryData.use_auto_discovery && queryData.company_info && (
-                    <div className="flex justify-between items-start py-2 border-b border-blue-200">
-                      <dt className="text-sm font-medium text-gray-600">Industry:</dt>
-                      <dd className="text-sm text-gray-900 text-right">{queryData.company_info.industry}</dd>
-                    </div>
-                  )}
                   <div className="flex justify-between items-center py-2 border-b border-blue-200">
                     <dt className="text-sm font-medium text-gray-600">Created:</dt>
                     <dd className="text-sm text-gray-900">{new Date(queryData.created_at).toLocaleString()}</dd>

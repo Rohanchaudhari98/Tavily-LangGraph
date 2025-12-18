@@ -94,8 +94,9 @@ class QueryResult(BaseModel):
     competitors: List[str]
     freshness: Optional[str] = "anytime"
     
-    # Results (only present when completed)
+    # Results
     analysis: Optional[str] = None
+    chart_data: Optional[dict] = None  # Structured data for charts
     research_results: Optional[List[dict]] = None
     extracted_data: Optional[List[dict]] = None
     crawl_results: Optional[List[dict]] = None

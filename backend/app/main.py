@@ -26,10 +26,16 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+origins = [
+    "https://d13qhhlvt9ye93.cloudfront.net",  # CloudFront frontend
+    "https://www.tavilyapp.com",   
+    "https://tavilyapp.com"
+]
+
 # CORS middleware - Allow all origins for AWS deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://d13qhhlvt9ye93.cloudfront.net"],
+    allow_origins=origins, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
