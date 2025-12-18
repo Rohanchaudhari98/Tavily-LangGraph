@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import ExportButtons from './ExportButtons';
+import ChartsView from './charts/ChartsView';
 
 export default function ResultsDisplay({ queryData }) {
   const [activeTab, setActiveTab] = useState('analysis');
+  const [activeSubTab, setActiveSubTab] = useState('narrative');
 
   if (!queryData) {
     return (
@@ -67,6 +70,11 @@ export default function ResultsDisplay({ queryData }) {
     { id: 'analysis', label: 'Analysis', show: queryData.status === 'completed' },
     { id: 'research', label: 'Research Results', show: queryData.research_results?.length > 0 },
     { id: 'metadata', label: 'Metadata', show: true },
+  ];
+
+  const subTabs = [
+    { id: 'narrative', label: 'Narrative', icon: '📄' },
+    { id: 'charts', label: 'Charts', icon: '📈' },
   ];
 
   return (
@@ -168,10 +176,38 @@ export default function ResultsDisplay({ queryData }) {
           {activeTab === 'analysis' && (
             <div>
               {queryData.status === 'completed' && queryData.analysis ? (
-                <div className="prose prose-lg max-w-none">
-                  <ReactMarkdown>
-                    {queryData.analysis}
-                  </ReactMarkdown>
+                <div>
+                  {/* Sub-tabs for Analysis */}
+                  <div className="flex space-x-1 mb-6 border-b border-gray-200">
+                    {subTabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveSubTab(tab.id)}
+                        className={`px-4 py-2 text-sm font-medium transition-colors ${
+                          activeSubTab === tab.id
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <span className="mr-2">{tab.icon}</span>
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Narrative View */}
+                  {activeSubTab === 'narrative' && (
+                    <div className="prose prose-lg max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {queryData.analysis}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+
+                  {/* Charts View */}
+                  {activeSubTab === 'charts' && (
+                    <ChartsView chartData={queryData.chart_data} />
+                  )}
                 </div>
               ) : queryData.status === 'processing' ? (
                 <div className="text-center py-16">
