@@ -56,3 +56,7 @@ htmlcov/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+#environment
+backend/.env.production
+frontend/.env.production

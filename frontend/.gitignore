@@ -1,3 +1,6 @@
+# Python
+**/__pycache__/
+
 # Logs
 logs
 *.log
@@ -22,3 +25,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+#environment
+backend/.env.production
+frontend/.env.production
