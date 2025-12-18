@@ -4,8 +4,9 @@ Analysis Agent - Uses GPT-4 to synthesize competitive intelligence.
 This agent:
 1. Takes research results and extracted content
 2. Analyzes pricing, features, positioning
-3. Generates strategic insights and recommendations
-4. Handles flexible queries with "Additional Insights" section
+3. Conducts strategic risk assessment
+4. Generates strategic insights and recommendations
+5. Handles flexible queries with "Additional Insights" section
 """
 
 from openai import OpenAI
@@ -25,6 +26,7 @@ class AnalysisAgent:
     - Pricing comparison
     - Feature analysis
     - Market positioning insights
+    - Risk analysis and threat assessment
     - Additional insights (for non-standard queries)
     - Strategic recommendations
     
@@ -261,7 +263,46 @@ Create a comprehensive competitive intelligence report for {company_name} with t
    - How should {company_name} position itself to stand out?
    - What differentiators should {company_name} emphasize?
 
-**5. ADDITIONAL INSIGHTS** (ONLY include if query asks about topics not covered above)
+**5. RISK ANALYSIS**
+   Conduct a strategic risk assessment from {company_name}'s perspective:
+
+   **Critical Risks** (Immediate attention required):
+   - Identify specific competitive threats with high impact AND high likelihood
+   - What competitor capabilities directly threaten {company_name}'s market position?
+   - What pricing pressures could erode {company_name}'s revenue?
+   - What feature gaps put {company_name} at risk of customer churn?
+   - For each risk provide:
+     * Clear description of the threat
+     * Impact level: High/Medium/Low (with brief justification)
+     * Likelihood: High/Medium/Low (based on competitive moves observed)
+     * Recommended mitigation action for {company_name}
+     * Suggested timeline (e.g., "Q1 2024", "Within 6 months")
+
+   **Emerging Risks** (Monitor and prepare):
+   - Market trends that could become significant threats
+   - Technology shifts competitors are adopting
+   - New entrants or business models disrupting the market
+   - Regulatory or industry changes that could impact {company_name}
+
+   **Strategic Opportunities at Risk**:
+   - Market segments {company_name} is losing or could lose to competitors
+   - Revenue streams under competitive pressure
+   - Growth opportunities competitors might capture first
+   - Partnerships or channels at risk
+
+   **Risk Mitigation Priorities**:
+   - Rank top 3-5 risks by urgency
+   - Provide specific action items with timelines
+   - Estimate required investment level (High/Medium/Low) where relevant
+   
+   **Format each critical risk as:**
+   **Risk Name** (Impact: X | Likelihood: Y)
+   - **Threat**: [Specific competitive threat]
+   - **Impact on {company_name}**: [Business impact]
+   - **Mitigation**: [Specific action for {company_name}]
+   - **Timeline**: [When to act]
+
+**6. ADDITIONAL INSIGHTS** (ONLY include if query asks about topics not covered above)
    - Topics that might require this section:
      * Customer support quality and response times
      * Partnerships, acquisitions, or strategic alliances
@@ -272,28 +313,33 @@ Create a comprehensive competitive intelligence report for {company_name} with t
      * Geographic presence or expansion plans
      * Sustainability or social responsibility initiatives
    - Address any unique aspects from the query: "{query}"
-   - Provide insights that don't fit neatly into pricing, features, or positioning
+   - Provide insights that don't fit neatly into pricing, features, positioning, or risks
    - **IMPORTANT:** Skip this section entirely if not needed for the query
 
-**6. STRATEGIC RECOMMENDATIONS FOR {company_name}**
+**7. STRATEGIC RECOMMENDATIONS FOR {company_name}**
    - Opportunities {company_name} should pursue based on competitor weaknesses
    - Competitive advantages {company_name} should leverage
    - Areas where {company_name} should differentiate itself from competitors
    - Specific, actionable steps {company_name} should take to improve market position
-   - Short-term and long-term strategic moves
+   - **Short-term moves** (next 3-6 months) prioritized by impact
+   - **Long-term strategic initiatives** (6-12+ months)
+   - Quick wins that can be implemented immediately
 
 **FORMATTING RULES:**
-- Use clear markdown formatting with headers
+- Use clear markdown formatting with headers (## for sections, ### for subsections)
 - Write in a professional, analytical tone
 - Be specific and data-driven when possible
 - Avoid generic advice - make it actionable for {company_name}
 - Keep the analysis focused on the query: "{query}"
+- Use bullet points for clarity and scannability
+- Highlight critical risks and urgent actions clearly
 
 **REMEMBER:** 
 - Write as if you're presenting TO {company_name}, not about them
 - Say "{company_name} should..." not "the competitor should..."
 - All recommendations are for {company_name}'s benefit
 - Every insight should help {company_name} compete better
+- Risk analysis must be specific, quantified where possible, and actionable
 """
 
         user_prompt = f"""Analyze the following competitive intelligence data for {company_name}:
@@ -311,8 +357,8 @@ Provide a comprehensive competitive analysis following the structure in your sys
 Focus on answering the specific query "{query}" while providing strategic context that helps 
 {company_name} understand the competitive landscape and identify opportunities.
 
-Remember to skip section 5 (Additional Insights) if the query only asks about standard topics 
-like pricing, features, or positioning."""
+Remember to skip section 6 (Additional Insights) if the query only asks about standard topics 
+like pricing, features, positioning, or risks."""
 
         logger.info(f"🤖 Calling {self.model} for {company_name}...")
         
@@ -328,7 +374,7 @@ like pricing, features, or positioning."""
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.3,  # Lower temperature for more focused analysis
-                max_tokens=2500  # Increased to accommodate additional section
+                max_tokens=3000  # Increased to accommodate risk analysis section
             )
         )
         

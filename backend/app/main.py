@@ -29,7 +29,7 @@ app = FastAPI(
 # CORS middleware - Allow all origins for AWS deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=["http://d13qhhlvt9ye93.cloudfront.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
