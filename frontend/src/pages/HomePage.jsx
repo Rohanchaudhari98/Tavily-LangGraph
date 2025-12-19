@@ -70,7 +70,7 @@ export default function HomePage() {
             {/* Feature 1 */}
             <div className="feature-card group">
               <div className="w-16 h-16 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <span className="text-3xl">🤖</span>
+                <span className="text-3xl">🔍</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
                 AI-Powered Research
