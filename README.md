@@ -444,7 +444,7 @@ Response: 200 OK
 ### Backend Tests
 ```bash
 cd backend
-pytest tests/ -v
+pytest -v
 ```
 
 ### Frontend Tests
@@ -590,6 +590,9 @@ eb deploy
 cd frontend
 npm run build
 aws s3 sync dist/ s3://your-bucket-name
+aws cloudfront create-invalidation \                           
+  --distribution-id <distribution_id> \
+  --paths "/*"
 ```
 
 ## 🐛 Troubleshooting
