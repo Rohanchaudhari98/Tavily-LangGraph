@@ -26,7 +26,7 @@ export default function HomePage() {
           {/* Quick stats */}
           <div className="flex justify-center gap-8 text-white mb-12">
             <div className="text-center">
-              <div className="text-4xl font-bold mb-1">4</div>
+              <div className="text-4xl font-bold mb-1">Adaptive</div>
               <div className="text-blue-200 text-sm">AI Agents</div>
             </div>
             <div className="text-center">
@@ -70,7 +70,7 @@ export default function HomePage() {
                 AI-Powered Research
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                4 specialized agents work together to gather comprehensive intelligence from multiple sources, ensuring thorough and accurate analysis.
+                Specialized AI agents dynamically collaborate based on your query to analyze competitors, pricing, features, and market signals with high precision.
               </p>
             </div>
 
