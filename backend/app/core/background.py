@@ -62,6 +62,7 @@ async def run_workflow_background(
         await db.update_query(query_id, {
             "status": "completed",
             "analysis": final_state.get("analysis"),
+            "chart_data": final_state.get("chart_data"),
             "competitors": final_state.get("competitors"),
             "company_info": final_state.get("company_info"),
             "research_results": final_state.get("research_results"),

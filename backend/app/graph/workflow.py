@@ -171,6 +171,7 @@ def create_initial_state(
         extracted_data=[],
         crawl_results=[],
         analysis=None,
+        chart_data=None,
         
         # Workflow tracking
         current_step="initialized",

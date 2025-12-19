@@ -102,7 +102,7 @@ async def create_query(
         freshness=request.freshness,
         tavily_api_key=settings.tavily_api_key,
         openai_api_key=settings.openai_api_key,
-        db=get_db_for_background()  # lazy DB for background
+        db=get_db_for_background()
     )
     
     logger.info(f"Background task started for query {query_id}")
@@ -150,6 +150,7 @@ async def get_query(
         competitors=query["competitors"],
         freshness=query.get("freshness", "anytime"),
         analysis=query.get("analysis"),
+        chart_data=query.get("chart_data"),
         research_results=query.get("research_results"),
         extracted_data=query.get("extracted_data"),
         crawl_results=query.get("crawl_results"),

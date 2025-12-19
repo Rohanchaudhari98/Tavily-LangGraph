@@ -83,6 +83,9 @@ class CompetitiveIntelligenceState(TypedDict):
     Output from Analysis Agent.
     Comprehensive competitive intelligence report (markdown format).
     """
+
+    chart_data: Optional[Dict]
+    """Structured data for charts (pricing, features, risks)"""
     
     # ===== WORKFLOW METADATA =====
     current_step: str
