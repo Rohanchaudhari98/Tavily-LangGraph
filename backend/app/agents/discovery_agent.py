@@ -3,7 +3,7 @@ Competitor Discovery Agent - Automatically identifies competitors.
 
 This agent:
 1. Takes a company name
-2. Uses GPT-4 to understand the company's domain with precision
+2. Uses GPT-4o-mini to understand the company's domain with precision
 3. Uses Tavily Search to find DIRECT competitors
 4. Filters out adjacent market players and non-competitors
 5. Returns top N most relevant competitors
@@ -23,9 +23,9 @@ class CompetitorDiscoveryAgent:
     Automatically discovers competitors for a given company.
     
     Uses a two-step approach with improved precision:
-    1. GPT-4 to understand the company's CORE BUSINESS and MARKET SEGMENT
+    1. GPT-4o-mini to understand the company's CORE BUSINESS and MARKET SEGMENT
     2. Tavily Search to find actual DIRECT competitors from the web
-    3. GPT-4 to filter and validate competitor relevance
+    3. GPT-4o-mini to filter and validate competitor relevance
     """
     
     def __init__(self, tavily_api_key: str, openai_api_key: str):
@@ -66,7 +66,7 @@ class CompetitorDiscoveryAgent:
         logger.info(f"Target: Find up to {max_competitors} direct competitors")
         
         try:
-            # Step 1: Understand the company using GPT-4 with precision
+            # Step 1: Understand the company using GPT-4o-mini with precision
             company_info = await self._understand_company(company_name)
             
             logger.info(f"Company analysis complete:")
@@ -105,7 +105,7 @@ class CompetitorDiscoveryAgent:
     
     async def _understand_company(self, company_name: str) -> Dict:
         """
-        Use GPT-4 to understand what the company does with precision.
+        Use GPT-4o-mini to understand what the company does with precision.
         
         Args:
             company_name: Name of the company
@@ -113,7 +113,7 @@ class CompetitorDiscoveryAgent:
         Returns:
             Dictionary with detailed company profile
         """
-        logger.info(f"Analyzing {company_name} with GPT-4...")
+        logger.info(f"Analyzing {company_name} with GPT-4o-mini...")
         
         prompt = f"""You are a business analyst expert. Analyze "{company_name}" precisely.
 
@@ -178,7 +178,7 @@ Be extremely specific. Avoid generic industry terms."""
         
         Args:
             company_name: Name of the company
-            company_info: Information about the company from GPT-4
+            company_info: Information about the company from GPT-4o-mini
             max_competitors: Maximum number of competitors to return
             
         Returns:
@@ -235,9 +235,9 @@ Be extremely specific. Avoid generic industry terms."""
             except Exception as e:
                 logger.warning(f"Search failed for '{query}': {str(e)}")
         
-        # If not enough found, use GPT-4 fallback
+        # If not enough found, use GPT-4o-mini fallback
         if len(competitors) < max_competitors:
-            logger.info(f"Only found {len(competitors)}, using GPT-4 to supplement...")
+            logger.info(f"Only found {len(competitors)}, using GPT-4o-mini to supplement...")
             gpt_competitors = await self._get_competitors_from_gpt(
                 company_name,
                 company_info,
@@ -260,7 +260,7 @@ Be extremely specific. Avoid generic industry terms."""
         """
         Extract competitor names from Tavily search results with strict filtering.
         
-        Uses GPT-4 to intelligently parse the search results and
+        Uses GPT-4o-mini to intelligently parse the search results and
         identify DIRECT competitors only.
         """
         # Get the AI answer and top results
@@ -325,7 +325,7 @@ Return ONLY direct competitors as JSON:
             return competitors
             
         except Exception as e:
-            logger.warning(f"GPT-4 extraction failed: {str(e)}")
+            logger.warning(f"GPT-4o-mini extraction failed: {str(e)}")
             return []
     
     async def _get_competitors_from_gpt(
@@ -335,7 +335,7 @@ Return ONLY direct competitors as JSON:
         count: int = 5
     ) -> List[str]:
         """
-        Use GPT-4 knowledge as fallback to suggest competitors.
+        Use GPT-4o-mini knowledge as fallback to suggest competitors.
         
         This is used when web search doesn't find enough competitors.
         """
@@ -388,11 +388,11 @@ Be selective. Quality over quantity."""
             result = json.loads(response.choices[0].message.content)
             competitors = result.get("competitors", [])
             
-            logger.info(f"GPT-4 suggested {len(competitors)} competitors")
+            logger.info(f"GPT-4o-mini suggested {len(competitors)} competitors")
             return competitors
             
         except Exception as e:
-            logger.error(f"GPT-4 fallback failed: {str(e)}")
+            logger.error(f"GPT-4o-mini fallback failed: {str(e)}")
             return []
     
     def __repr__(self):

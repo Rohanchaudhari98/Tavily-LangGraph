@@ -2,26 +2,22 @@
 
 An AI-powered competitive intelligence platform that analyzes competitors using multi-agent architecture with LangGraph orchestration. Get comprehensive insights on pricing, features, market positioning, and strategic recommendations.
 
-<<<<<<< HEAD
 URL: https://d13qhhlvt9ye93.cloudfront.net
 
-![Platform Screenshot](docs/screenshot.png)
-=======
 <img width="3962" height="6400" alt="frontend10-1" src="https://github.com/user-attachments/assets/15954db3-a663-4857-9330-c9465cda903b" />
 
->>>>>>> 3f39ad4f35b83a9fdb6955101a5112dcb87dddbd
 
 ## 🌟 Features
 
 ### Multi-Agent Architecture
-- **Discovery Agent** (Optional) - Automatically identifies competitors using GPT-4 + Tavily AI
+- **Discovery Agent** (Optional) - Automatically identifies competitors using GPT-4o-mini + Tavily AI
   - Understands company's core business and market segment
   - Searches for direct competitors using Tavily
   - Validates and filters competitors for relevance
 - **Research Agent** - Gathers initial intelligence using Tavily AI search with freshness filtering
 - **Extraction Agent** - Extracts detailed structured data from competitor websites
 - **Crawl Agent** - Performs deep web crawling for comprehensive data collection
-- **Analysis Agent** - Synthesizes all data into strategic insights using GPT-4
+- **Analysis Agent** - Synthesizes all data into strategic insights using GPT-4o-mini/GPT-4o
 
 ### Comprehensive Analysis
 - **Pricing Comparison** - Competitive pricing models and strategies
@@ -36,7 +32,7 @@ URL: https://d13qhhlvt9ye93.cloudfront.net
 
 ### Smart Features
 - **Auto-Discovery** - Automatically find competitors by just providing your company name
-  - Uses GPT-4 to understand your business domain
+  - Uses GPT-4o-mini to understand your business domain
   - Discovers direct competitors using intelligent search
   - Configurable maximum number of competitors (1-10)
 - **Freshness Filter** - Filter search results by time range
@@ -71,7 +67,6 @@ URL: https://d13qhhlvt9ye93.cloudfront.net
 - **LLM:** OpenAI GPT-4o / GPT-4o-mini
 - **Search API:** Tavily AI
 - **Database:** MongoDB Atlas
-- **Web Scraping:** BeautifulSoup4, Playwright
 
 **Frontend:**
 - **Framework:** React 18 with Vite
@@ -125,7 +120,7 @@ URL: https://d13qhhlvt9ye93.cloudfront.net
 ┌─────────────────────────────────────────────────────────────────┐
 │                    External Services                            │
 │  • Tavily AI (Search & Summarization)                          │
-│  • OpenAI GPT-4 (Analysis)                                     │
+│  • OpenAI GPT-4o-mini/GPT-4o (Analysis)                                     │
 │  • MongoDB Atlas (Data Storage)                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -136,7 +131,8 @@ URL: https://d13qhhlvt9ye93.cloudfront.net
    - **Option A (Auto-Discovery)**: Enable auto-discovery to automatically find competitors
    - **Option B (Manual)**: Provide list of competitors manually
    - **Freshness Filter**: Choose time range for search results (anytime, 1 month, 3 months, 6 months, 1 year)
-2. **Discovery Agent** (if enabled) - Uses GPT-4 to understand company domain, then Tavily to discover relevant competitors
+   - **Premium Analysis**: Choose which model you would want to use (GPT-4o-mini vs GPT-4o)
+2. **Discovery Agent** (if enabled) - Uses GPT-4o-mini to understand company domain, then Tavily to discover relevant competitors
 3. **Research Agent** - Searches for each competitor using Tavily AI with freshness filtering applied
 4. **Extraction Agent** - Extracts structured data from competitor websites
 5. **Crawl Agent** - Performs deep crawling for additional context and hidden information
@@ -239,7 +235,7 @@ Frontend will run on `http://localhost:5173`
      - **Manual Entry:** Toggle off to provide your own list
        - Add 1-10 competitors (e.g., "Perplexity AI", "You.com")
    - **Freshness Filter:** Choose time range (Anytime, Past Month, Past 3/6/12 Months)
-   - **Premium Analysis:** Optional (uses GPT-4o for better quality)
+   - **Premium Analysis:** Optional (uses GPT-4o-mini/GPT-4o for better quality)
 
 3. **Click "Analyze Competitors"**
    - Auto-discovery queries take 30-40 seconds (includes discovery phase)
@@ -482,11 +478,11 @@ competitive-intelligence-platform/
 ├── backend/
 │   ├── app/
 │   │   ├── agents/
-│   │   │   ├── discovery_agent.py     # Auto-competitor discovery (GPT-4 + Tavily)
+│   │   │   ├── discovery_agent.py     # Auto-competitor discovery (GPT-4o-mini + Tavily)
 │   │   │   ├── research_agent.py      # Tavily AI search (with freshness filter)
 │   │   │   ├── extraction_agent.py    # Website data extraction
 │   │   │   ├── crawl_agent.py         # Deep web crawling
-│   │   │   └── analysis_agent.py      # GPT-4 synthesis + chart data extraction
+│   │   │   └── analysis_agent.py      # GPT-4o-mini/GPT-4o synthesis + chart data extraction
 │   │   ├── workflow/
 │   │   │   └── competitive_intel_workflow.py  # LangGraph orchestration
 │   │   ├── database/
@@ -638,16 +634,7 @@ npm install
 - Ensure company name is recognizable (use full company name)
 - Check backend logs for discovery agent errors
 - If discovery fails, try manual competitor entry as fallback
-- Discovery uses GPT-4o which may have rate limits
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
+- Discovery uses GPT-4o-mini which may have rate limits
 
 ## 🙏 Acknowledgments
 
@@ -660,8 +647,4 @@ Contributions are welcome! Please:
 
 ---
 
-<<<<<<< HEAD
 **Built using Tavily and LangGraph**
-=======
-**Built with ❤️ using AI agents and LangGraph**
->>>>>>> 3f39ad4f35b83a9fdb6955101a5112dcb87dddbd
