@@ -8,6 +8,7 @@ This tests the complete workflow orchestration:
 4. Validates results
 """
 
+import pytest
 import asyncio
 import time
 from app.graph.workflow import (
@@ -17,6 +18,7 @@ from app.graph.workflow import (
 from app.config import settings
 
 
+@pytest.mark.asyncio
 async def test_langgraph_workflow():
     """
     Test the complete LangGraph workflow with 3 competitors.
@@ -146,6 +148,7 @@ async def test_langgraph_workflow():
     return final_state
 
 
+@pytest.mark.asyncio
 async def test_workflow_state_flow():
     """
     Test that state flows correctly between agents.

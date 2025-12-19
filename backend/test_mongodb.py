@@ -2,12 +2,14 @@
 Test MongoDB service connection and basic operations.
 """
 
+import pytest
 import asyncio
 from app.services.mongodb_service import MongoDBService
 from app.config import settings
 from datetime import datetime
 
 
+@pytest.mark.asyncio
 async def test_mongodb():
     """Test basic MongoDB operations"""
     
