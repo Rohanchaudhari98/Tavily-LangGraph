@@ -7,7 +7,11 @@ An AI-powered competitive intelligence platform that analyzes competitors using 
 ## 🌟 Features
 
 ### Multi-Agent Architecture
-- **Research Agent** - Gathers initial intelligence using Tavily AI search
+- **Discovery Agent** (Optional) - Automatically identifies competitors using GPT-4 + Tavily AI
+  - Understands company's core business and market segment
+  - Searches for direct competitors using Tavily
+  - Validates and filters competitors for relevance
+- **Research Agent** - Gathers initial intelligence using Tavily AI search with freshness filtering
 - **Extraction Agent** - Extracts detailed structured data from competitor websites
 - **Crawl Agent** - Performs deep web crawling for comprehensive data collection
 - **Analysis Agent** - Synthesizes all data into strategic insights using GPT-4
@@ -18,12 +22,32 @@ An AI-powered competitive intelligence platform that analyzes competitors using 
 - **Market Positioning** - Target segments and value propositions
 - **Additional Insights** - Support quality, partnerships, brand reputation
 - **Strategic Recommendations** - Actionable advice for your company
+- **Interactive Charts** - Visual data representations automatically generated from analysis
+  - **Pricing Bar Chart** - Compare pricing tiers across competitors
+  - **Feature Radar Chart** - Multi-dimensional feature comparison (0-10 scale)
+  - **Risk Assessment Matrix** - Visual risk analysis with impact and likelihood scores
+
+### Smart Features
+- **Auto-Discovery** - Automatically find competitors by just providing your company name
+  - Uses GPT-4 to understand your business domain
+  - Discovers direct competitors using intelligent search
+  - Configurable maximum number of competitors (1-10)
+- **Freshness Filter** - Filter search results by time range
+  - Options: Anytime, Past Month, Past 3 Months, Past 6 Months, Past Year
+  - Ensures you get the most recent competitive intelligence
+  - Perfect for tracking recent changes and updates
 
 ### Modern User Interface
-- **Beautiful Design** - Modern gradients, glassmorphism, smooth animations
-- **Three-Tab Interface** - Analysis, Research Results, Metadata
-- **Query History** - Track and manage all your analyses
-- **Export Reports** - Download as PDF or Word documents
+- **Dark Gradient Hero Section** - Stunning hero with animated blob backgrounds and gradient overlays
+- **Modern Design System** - Gradient buttons, enhanced cards with depth, and smooth hover animations
+- **Improved Typography** - Inter font family with full weight range (400-900) for better readability
+- **Enhanced Form Design** - Rounded input fields with focus states and shadow effects
+- **Status Badges** - Gradient status indicators for processing, completed, and failed states
+- **Feature Cards** - Interactive cards with gradient icon backgrounds and hover scale effects
+- **Three-Tab Interface** - Analysis, Research Results, and Metadata with modern prose styling
+- **Interactive Data Visualization** - Charts tab with pricing, features, and risk visualizations using Recharts
+- **Query History** - Track and manage all your analyses with improved card layouts
+- **Export Reports** - Download as PDF or Word documents with professional formatting
 - **Real-time Updates** - Live progress tracking during analysis
 
 ### Analysis Modes
@@ -44,16 +68,19 @@ An AI-powered competitive intelligence platform that analyzes competitors using 
 
 **Frontend:**
 - **Framework:** React 18 with Vite
-- **Styling:** Tailwind CSS
+- **Styling:** Tailwind CSS with custom gradient utilities
+- **Typography:** Inter font family (weights 400-900)
+- **Design System:** Modern gradients, shadows, and animations
+- **Charts:** Recharts library for data visualization
 - **Routing:** React Router v6
 - **Export:** jsPDF, docx
-- **Markdown:** react-markdown
+- **Markdown:** react-markdown with enhanced prose styling
 
 ### System Architecture
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         User Interface                          │
-│  (React + Tailwind CSS - Modern Gradient Design)               │
+│  (React + Tailwind CSS - Dark Gradient Hero, Modern Cards)     │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ▼
@@ -67,16 +94,24 @@ An AI-powered competitive intelligence platform that analyzes competitors using 
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                   LangGraph Workflow                            │
+│  ┌──────────────┐  (Optional)                                  │
+│  │  Discovery   │  Auto-discovers competitors                  │
+│  │    Agent     │                                              │
+│  └──────┬───────┘                                              │
+│         │                                                       │
+│         ▼                                                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │   Research   │→ │  Extraction  │→ │     Crawl    │         │
 │  │    Agent     │  │    Agent     │  │    Agent     │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
-│                           │                                     │
-│                           ▼                                     │
-│                  ┌──────────────┐                              │
-│                  │   Analysis   │                              │
-│                  │    Agent     │                              │
-│                  └──────────────┘                              │
+│  │(with freshness│  └──────────────┘  └──────────────┘         │
+│  │   filtering) │                                               │
+│  └──────┬───────┘                                               │
+│         │                                                       │
+│         ▼                                                       │
+│  ┌──────────────┐                                              │
+│  │   Analysis   │                                              │
+│  │    Agent     │                                              │
+│  └──────────────┘                                              │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ▼
@@ -90,13 +125,17 @@ An AI-powered competitive intelligence platform that analyzes competitors using 
 
 ### Data Flow
 
-1. **User submits query** with company name, competitors, and analysis focus
-2. **Research Agent** searches for each competitor using Tavily AI
-3. **Extraction Agent** extracts structured data from competitor websites
-4. **Crawl Agent** performs deep crawling for additional context
-5. **Analysis Agent** synthesizes all data into comprehensive report
-6. **Results displayed** in three tabs: Analysis, Research Results, Metadata
-7. **Export options** available as PDF or Word documents
+1. **User submits query** with company name, analysis focus, and optional settings:
+   - **Option A (Auto-Discovery)**: Enable auto-discovery to automatically find competitors
+   - **Option B (Manual)**: Provide list of competitors manually
+   - **Freshness Filter**: Choose time range for search results (anytime, 1 month, 3 months, 6 months, 1 year)
+2. **Discovery Agent** (if enabled) - Uses GPT-4 to understand company domain, then Tavily to discover relevant competitors
+3. **Research Agent** - Searches for each competitor using Tavily AI with freshness filtering applied
+4. **Extraction Agent** - Extracts structured data from competitor websites
+5. **Crawl Agent** - Performs deep crawling for additional context and hidden information
+6. **Analysis Agent** - Synthesizes all data into comprehensive strategic report
+7. **Results displayed** in three tabs: Analysis, Research Results, Metadata
+8. **Export options** available as PDF or Word documents
 
 ## 🚀 Getting Started
 
@@ -186,18 +225,27 @@ Frontend will run on `http://localhost:5173`
 2. **Fill out the form:**
    - **Your Company Name:** e.g., "Tavily"
    - **Analysis Query:** e.g., "Compare pricing strategy and key features"
-   - **Competitors:** Add 1-10 competitors (e.g., "Perplexity AI", "You.com")
+   - **Choose Input Mode:**
+     - **Auto-Discovery (Recommended):** Toggle on to automatically find competitors
+       - Select max competitors (1-10)
+       - AI will discover the most relevant direct competitors
+     - **Manual Entry:** Toggle off to provide your own list
+       - Add 1-10 competitors (e.g., "Perplexity AI", "You.com")
+   - **Freshness Filter:** Choose time range (Anytime, Past Month, Past 3/6/12 Months)
    - **Premium Analysis:** Optional (uses GPT-4o for better quality)
 
 3. **Click "Analyze Competitors"**
-   - Analysis takes 20-40 seconds
-   - Progress shown in real-time
+   - Auto-discovery queries take 30-40 seconds (includes discovery phase)
+   - Manual queries take 20-30 seconds
+   - Progress shown in real-time with agent status
    - Page auto-refreshes every 3 seconds
 
 4. **View Results:**
-   - **Analysis Tab:** Comprehensive strategic report
-   - **Research Results Tab:** AI summaries and source links
-   - **Metadata Tab:** Query details and processing info
+   - **Analysis Tab:** 
+     - **Narrative Sub-tab:** Comprehensive strategic report in markdown format
+     - **Charts Sub-tab:** Interactive visualizations (Pricing Bar Chart, Feature Radar, Risk Matrix)
+   - **Research Results Tab:** AI summaries and source links from Tavily
+   - **Metadata Tab:** Query details, processing info, and discovery mode
 
 5. **Export Report:**
    - Click "PDF" or "Word" button
@@ -209,33 +257,40 @@ Frontend will run on `http://localhost:5173`
 
 ### Example Queries
 
-**SaaS Product Comparison:**
+**Using Auto-Discovery (Recommended):**
+```
+Company: Netflix
+Query: Compare pricing tiers, content library features, and competitive risks
+Auto-Discovery: Enabled (max 5 competitors)
+Freshness: Past 6 Months
+```
+The system will automatically discover Hulu, HBO Max, Disney+, and other streaming competitors.
+
+**Manual Competitor Entry:**
 ```
 Company: Notion
 Query: Analyze collaboration features, pricing tiers, and integration capabilities
 Competitors: Confluence, Coda, Airtable
+Freshness: Anytime
 ```
 
-**E-commerce Platform:**
+**Recent Changes Tracking:**
 ```
 Company: Shopify
 Query: Compare pricing, app ecosystem, and merchant support features
-Competitors: WooCommerce, BigCommerce, Squarespace
+Auto-Discovery: Enabled (max 3 competitors)
+Freshness: Past 3 Months
 ```
+Perfect for tracking recent changes in competitive landscape.
 
 **AI Search Engines:**
 ```
 Company: Tavily
 Query: Evaluate API capabilities, search quality, and pricing models
 Competitors: Perplexity AI, You.com, Brave Search
+Freshness: Past Month
 ```
-
-**Video Conferencing:**
-```
-Company: Zoom
-Query: Compare meeting capacity, recording features, and enterprise pricing
-Competitors: Microsoft Teams, Google Meet, Webex
-```
+Use freshness filter to see the latest updates.
 
 ## 🔧 Configuration
 
@@ -297,8 +352,30 @@ Content-Type: application/json
   "company_name": "Tavily",
   "query": "pricing and features",
   "competitors": ["Perplexity AI", "You.com"],
+  "use_auto_discovery": false,
+  "max_competitors": 5,
+  "freshness": "3months",
   "use_premium_analysis": false
 }
+```
+
+**With Auto-Discovery:**
+```http
+POST /api/queries
+Content-Type: application/json
+
+{
+  "company_name": "Netflix",
+  "query": "Compare pricing and content library",
+  "competitors": [],
+  "use_auto_discovery": true,
+  "max_competitors": 5,
+  "freshness": "6months",
+  "use_premium_analysis": false
+}
+```
+
+**Freshness Options:** `"anytime"`, `"1month"`, `"3months"`, `"6months"`, `"1year"`
 
 Response: 201 Created
 {
@@ -320,6 +397,11 @@ Response: 200 OK
   "status": "completed",
   "research_results": [...],
   "analysis": "...",
+  "chart_data": {
+    "pricing": [...],
+    "features": [...],
+    "risks": [...]
+  },
   "created_at": "2024-01-15T10:30:00Z"
 }
 ```
@@ -370,15 +452,22 @@ npm test
 
 ### Manual Testing Checklist
 
-- [ ] Submit query with 2-3 competitors
-- [ ] Verify real-time progress updates
+- [ ] Submit query with 2-3 competitors (manual mode)
+- [ ] Test auto-discovery feature with company name only
+- [ ] Verify freshness filter works (test different time ranges)
+- [ ] Verify real-time progress updates (including discovery agent)
 - [ ] Check all three tabs display correctly
-- [ ] Export to PDF - verify complete content
+- [ ] Verify charts are displayed in Analysis > Charts tab
+- [ ] Check pricing bar chart shows correct data
+- [ ] Verify feature radar chart displays all competitors
+- [ ] Check risk matrix shows risk assessment cards
+- [ ] Export to PDF - verify complete content (including charts)
 - [ ] Export to Word - verify complete content
 - [ ] View query in history page
 - [ ] Delete query from history
 - [ ] Test with premium analysis mode
 - [ ] Test error handling (invalid competitor name)
+- [ ] Verify discovered competitors are relevant
 
 ## 📁 Project Structure
 ```
@@ -386,10 +475,11 @@ competitive-intelligence-platform/
 ├── backend/
 │   ├── app/
 │   │   ├── agents/
-│   │   │   ├── research_agent.py      # Tavily AI search
+│   │   │   ├── discovery_agent.py     # Auto-competitor discovery (GPT-4 + Tavily)
+│   │   │   ├── research_agent.py      # Tavily AI search (with freshness filter)
 │   │   │   ├── extraction_agent.py    # Website data extraction
 │   │   │   ├── crawl_agent.py         # Deep web crawling
-│   │   │   └── analysis_agent.py      # GPT-4 synthesis
+│   │   │   └── analysis_agent.py      # GPT-4 synthesis + chart data extraction
 │   │   ├── workflow/
 │   │   │   └── competitive_intel_workflow.py  # LangGraph orchestration
 │   │   ├── database/
@@ -408,9 +498,14 @@ competitive-intelligence-platform/
 │   │   │   └── ResultsPage.jsx        # Results display
 │   │   ├── components/
 │   │   │   ├── QueryForm.jsx          # Query submission form
-│   │   │   ├── ResultsDisplay.jsx     # Three-tab results
+│   │   │   ├── ResultsDisplay.jsx     # Three-tab results with charts
 │   │   │   ├── ExportButtons.jsx      # PDF/Word export
-│   │   │   └── CompetitorInput.jsx    # Competitor management
+│   │   │   ├── CompetitorInput.jsx    # Competitor management
+│   │   │   └── charts/
+│   │   │       ├── ChartsView.jsx     # Main charts container
+│   │   │       ├── PricingChart.jsx   # Bar chart for pricing comparison
+│   │   │       ├── FeatureRadar.jsx   # Radar chart for features
+│   │   │       └── RiskMatrix.jsx     # Risk assessment visualization
 │   │   ├── services/
 │   │   │   ├── api.js                 # API client
 │   │   │   └── exportService.js       # Export functionality
@@ -450,19 +545,30 @@ competitive-intelligence-platform/
 
 ## 💰 Cost Estimation
 
-**Per Query (2 competitors, Standard mode):**
+**Per Query (Manual, 2 competitors, Standard mode):**
 - Tavily API: ~$0.002 (5 searches)
-- OpenAI GPT-4o-mini: ~$0.008 (analysis)
+- OpenAI GPT-4o-mini: ~$0.008 (analysis) + ~$0.001 (chart data extraction)
 - **Total: ~$0.01 per query**
 
-**Per Query (2 competitors, Premium mode):**
+**Per Query (Auto-Discovery, 2 competitors discovered, Standard mode):**
+- OpenAI GPT-4o: ~$0.02 (discovery agent - company analysis + validation)
+- Tavily API: ~$0.004 (discovery searches + 5 research searches)
+- OpenAI GPT-4o-mini: ~$0.008 (analysis) + ~$0.001 (chart data extraction)
+- **Total: ~$0.03 per query**
+
+**Per Query (Manual, 2 competitors, Premium mode):**
 - Tavily API: ~$0.002
 - OpenAI GPT-4o: ~$0.60 (analysis)
 - **Total: ~$0.60 per query**
 
-**Monthly Estimate (100 queries):**
-- Standard mode: ~$1.00/month
-- Premium mode: ~$60.00/month
+**Per Query (Auto-Discovery, 2 competitors discovered, Premium mode):**
+- OpenAI GPT-4o: ~$0.02 (discovery) + ~$0.60 (analysis)
+- Tavily API: ~$0.004
+- **Total: ~$0.62 per query**
+
+**Monthly Estimate (100 queries, 50% auto-discovery):**
+- Standard mode: ~$2.00/month
+- Premium mode: ~$61.00/month
 
 ## 🚀 Deployment
 
@@ -522,6 +628,13 @@ npm install
 - Check backend logs for errors
 - Ensure competitors exist and are searchable
 
+### Auto-discovery issues
+- Discovery agent requires valid OpenAI API key
+- Ensure company name is recognizable (use full company name)
+- Check backend logs for discovery agent errors
+- If discovery fails, try manual competitor entry as fallback
+- Discovery uses GPT-4o which may have rate limits
+
 ## 📝 License
 
 MIT License - See [LICENSE](LICENSE) file for details
@@ -547,6 +660,7 @@ For questions or support:
 - **LangGraph** - Multi-agent orchestration
 - **MongoDB Atlas** - Cloud database
 - **Tailwind CSS** - Modern styling framework
+- **Recharts** - React charting library for data visualization
 
 ---
 
