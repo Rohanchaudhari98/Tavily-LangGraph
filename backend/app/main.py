@@ -29,7 +29,8 @@ app = FastAPI(
 origins = [
     "https://d13qhhlvt9ye93.cloudfront.net",  # CloudFront frontend
     "https://www.tavilyapp.com",   
-    "https://tavilyapp.com"
+    "https://tavilyapp.com",
+    "http://localhost:5173"
 ]
 
 # CORS middleware - Allow all origins for AWS deployment

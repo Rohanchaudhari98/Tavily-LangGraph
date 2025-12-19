@@ -6,21 +6,20 @@ export default function HomePage() {
       {/* Hero Section with Gradient */}
       <div className="relative overflow-hidden">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900"></div>
         
         {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
         
         {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
             Competitive Intelligence
             <span className="block text-blue-200">Made Simple</span>
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-8 leading-relaxed">
-            Analyze your competitors using AI-powered research agents. Get comprehensive 
-            insights on pricing, features, and market positioning in minutes.
+          Analyze competitors, uncover pricing insights, and understand market positioning—all powered by AI.
           </p>
           
           {/* Quick stats */}
@@ -34,13 +33,20 @@ export default function HomePage() {
               <div className="text-blue-200 text-sm">Fast Results</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold mb-1">📊</div>
+              <div className="text-4xl font-bold mb-1">📤</div>
               <div className="text-blue-200 text-sm">Export Reports</div>
             </div>
           </div>
           
-          <a href="#form" className="inline-block btn-primary text-lg">
-            Start Your Analysis →
+          {/* Analyze Competitors Button */}
+          <a
+            href="#form"
+            className="inline-block bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900
+                       text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl
+                       hover:from-gray-800 hover:via-indigo-800 hover:to-purple-800
+                       transition-all duration-200 text-lg"
+          >
+            Analyze Competitors →
           </a>
         </div>
       </div>
@@ -63,7 +69,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="feature-card group">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">🤖</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -77,7 +83,7 @@ export default function HomePage() {
             {/* Feature 2 */}
             <div className="feature-card group">
               <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <span className="text-3xl">📊</span>
+                <span className="text-3xl">🧠</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
                 Deep Analysis
@@ -90,7 +96,7 @@ export default function HomePage() {
             {/* Feature 3 */}
             <div className="feature-card group">
               <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <span className="text-3xl">📄</span>
+                <span className="text-3xl">📤</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
                 Export Reports

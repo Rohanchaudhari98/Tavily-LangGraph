@@ -26,9 +26,7 @@ export default function HistoryPage() {
   };
 
   const handleDelete = async (queryId) => {
-    if (!confirm('Are you sure you want to delete this query?')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to delete this query?')) return;
 
     try {
       await deleteQuery(queryId);
@@ -77,12 +75,14 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen pb-12">
       {/* Modern Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      <div className="bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900 text-white">
         <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold mb-2">Query History</h1>
-              <p className="text-blue-100 text-lg">View and manage your analyses</p>
+              <h1 className="text-4xl font-extrabold mb-2 text-white">
+                Query History
+              </h1>
+              <p className="text-blue-100 text-lg">Your Analysis History</p>
             </div>
             <button
               onClick={() => navigate('/')}
@@ -160,7 +160,7 @@ export default function HistoryPage() {
                   <div className="flex flex-col gap-2 flex-shrink-0">
                     <button
                       onClick={() => navigate(`/results/${query.query_id}`)}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700
+                      className="bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900
                                  text-white font-semibold py-2.5 px-6 rounded-xl
                                  shadow-md hover:shadow-lg transition-all duration-200"
                     >

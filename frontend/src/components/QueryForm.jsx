@@ -136,18 +136,20 @@ export default function QueryForm() {
             
             {/* Toggle Switch */}
             <button
-              type="button"
-              onClick={() => setUseAutoDiscovery(!useAutoDiscovery)}
-              className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                useAutoDiscovery ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                  useAutoDiscovery ? 'translate-x-7' : 'translate-x-1'
-                }`}
-              />
-            </button>
+  type="button"
+  onClick={() => setUseAutoDiscovery(!useAutoDiscovery)}
+  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors
+    ${useAutoDiscovery 
+      ? 'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900' 
+      : 'bg-gray-300'
+    }`}
+>
+  <span
+    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+      useAutoDiscovery ? 'translate-x-7' : 'translate-x-1'
+    }`}
+  />
+</button>
           </div>
           
           {/* Max Competitors Selector - Only show when auto-discovery is ON */}

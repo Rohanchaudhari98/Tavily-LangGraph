@@ -16,14 +16,12 @@ export default function ResultsDisplay({ queryData }) {
     );
   }
 
-  // Calculate total agents dynamically based on auto-discovery
   const totalAgents = queryData.total_agents || (queryData.use_auto_discovery ? 5 : 4);
   const completedAgentsCount = queryData.completed_agents?.length || 0;
 
-  // Helper function to format freshness display
   const formatFreshness = (freshness) => {
     const freshnessMap = {
-      'anytime': 'Anytime (All results)',
+      anytime: 'Anytime (All results)',
       '1month': 'Past Month',
       '3months': 'Past 3 Months',
       '6months': 'Past 6 Months',
@@ -79,15 +77,10 @@ export default function ResultsDisplay({ queryData }) {
 
   return (
     <div className="space-y-8">
-      {/* Modern Header Card with Gradient */}
+      {/* Header / Hero Card – only color changed */}
       <div className="relative overflow-hidden rounded-2xl">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700"></div>
-        
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-        
-        {/* Content */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-700 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="relative p-8">
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
@@ -101,7 +94,7 @@ export default function ResultsDisplay({ queryData }) {
             {renderStatus()}
           </div>
 
-          {/* Stats Grid with Glassmorphism */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center hover:bg-white/15 transition-all">
               <div className="text-white/80 text-sm mb-1">Competitors</div>
@@ -135,7 +128,6 @@ export default function ResultsDisplay({ queryData }) {
             </div>
           </div>
 
-          {/* Export Section */}
           {queryData.status === 'completed' && (
             <div className="mt-6 pt-6 border-t border-white/20">
               <div className="flex items-center justify-between">
@@ -152,7 +144,7 @@ export default function ResultsDisplay({ queryData }) {
 
       {/* Analysis Tabs Card */}
       <div className="card p-8">
-        {/* Modern Tabs */}
+        {/* Main Tabs */}
         <div className="border-b-2 border-gray-200 mb-8">
           <nav className="flex space-x-8 -mb-px">
             {tabs.filter(tab => tab.show).map((tab) => (
@@ -161,7 +153,7 @@ export default function ResultsDisplay({ queryData }) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`pb-4 px-2 border-b-4 font-semibold text-sm transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 border-b-4 border-transparent'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -171,13 +163,12 @@ export default function ResultsDisplay({ queryData }) {
           </nav>
         </div>
 
-        {/* Tab Content */}
         <div>
           {activeTab === 'analysis' && (
             <div>
               {queryData.status === 'completed' && queryData.analysis ? (
                 <div>
-                  {/* Sub-tabs for Analysis */}
+                  {/* Sub-tabs */}
                   <div className="flex space-x-1 mb-6 border-b border-gray-200">
                     {subTabs.map((tab) => (
                       <button
@@ -185,7 +176,7 @@ export default function ResultsDisplay({ queryData }) {
                         onClick={() => setActiveSubTab(tab.id)}
                         className={`px-4 py-2 text-sm font-medium transition-colors ${
                           activeSubTab === tab.id
-                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 border-b-2 border-transparent font-semibold'
                             : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
@@ -195,16 +186,38 @@ export default function ResultsDisplay({ queryData }) {
                     ))}
                   </div>
 
-                  {/* Narrative View */}
+                  {/* 🔹 Enhanced Narrative Section */}
                   {activeSubTab === 'narrative' && (
-                    <div className="prose prose-lg max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
+                          h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
+                          h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
+                          p: ({ node, ...props }) => <p className="leading-relaxed mb-4" {...props} />,
+                          li: ({ node, ...props }) => <li className="mb-2 ml-4 list-disc" {...props} />,
+                          code: ({ node, ...props }) => (
+                            <code className="bg-gray-200 text-gray-800 rounded px-1 py-0.5 text-sm" {...props} />
+                          ),
+                          table: ({ node, ...props }) => (
+                            <div className="overflow-x-auto my-4">
+                              <table className="table-auto border-collapse border border-gray-300 w-full" {...props} />
+                            </div>
+                          ),
+                          th: ({ node, ...props }) => (
+                            <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />
+                          ),
+                          td: ({ node, ...props }) => (
+                            <td className="border border-gray-300 px-3 py-1" {...props} />
+                          ),
+                        }}
+                      >
                         {queryData.analysis}
                       </ReactMarkdown>
                     </div>
                   )}
 
-                  {/* Charts View */}
                   {activeSubTab === 'charts' && (
                     <ChartsView chartData={queryData.chart_data} />
                   )}
@@ -289,7 +302,7 @@ export default function ResultsDisplay({ queryData }) {
             </div>
           )}
 
-          {activeTab === 'metadata' && (
+{activeTab === 'metadata' && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">

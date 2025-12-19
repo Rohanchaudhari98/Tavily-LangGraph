@@ -42,7 +42,6 @@ export const exportToPDF = (queryData) => {
   doc.text(`Company: ${queryData.company_name}`, margin, yPosition);
   yPosition += 6;
   
-  // Handle long query text
   const queryLines = doc.splitTextToSize(`Query: ${queryData.query}`, maxLineWidth);
   doc.text(queryLines, margin, yPosition);
   yPosition += (queryLines.length * 6) + 2;
@@ -61,21 +60,32 @@ export const exportToPDF = (queryData) => {
   doc.line(margin, yPosition, pageWidth - margin, yPosition);
   yPosition += 10;
   
-  // Analysis content with proper markdown parsing
+  // Analysis content
   if (queryData.analysis) {
     const lines = queryData.analysis.split('\n');
     
     for (let line of lines) {
-      // Skip empty lines but add small space
       if (line.trim() === '') {
         yPosition += 3;
         continue;
       }
       
-      // Handle ## Headers (Main sections)
+      // Explicitly handle Risk / Recommendation headings without bold
+      if (line.startsWith('## Risk') || line.startsWith('## Recommendation')) {
+        checkPageBreak(15);
+        yPosition += 5;
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'normal'); // ensure normal weight
+        const headerText = line.replace('## ', '');
+        doc.text(headerText, margin, yPosition);
+        yPosition += 8;
+        continue;
+      }
+
+      // Handle ## Headers (other main sections)
       if (line.startsWith('## ')) {
         checkPageBreak(15);
-        yPosition += 5; // Extra space before header
+        yPosition += 5;
         doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
         const headerText = line.replace('## ', '').replace(/\*/g, '');
@@ -100,8 +110,8 @@ export const exportToPDF = (queryData) => {
         continue;
       }
       
-      // Handle bold lines (lines with ** at start and end)
-      if (line.trim().startsWith('**') || line.includes('**')) {
+      // Handle bold lines only if explicitly marked
+      if (line.trim().startsWith('**') && line.trim().endsWith('**')) {
         checkPageBreak(8);
         doc.setFont(undefined, 'bold');
         const boldText = line.replace(/\*\*/g, '').trim();
@@ -112,7 +122,7 @@ export const exportToPDF = (queryData) => {
         continue;
       }
       
-      // Handle bullet points (- or *)
+      // Bullet points
       if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
         checkPageBreak(8);
         const bulletText = line.trim().substring(2).replace(/\*\*/g, '');
@@ -122,7 +132,7 @@ export const exportToPDF = (queryData) => {
         continue;
       }
       
-      // Handle numbered lists
+      // Numbered lists
       if (line.trim().match(/^\d+\. /)) {
         checkPageBreak(8);
         const listText = line.trim().replace(/\*\*/g, '');
@@ -132,7 +142,7 @@ export const exportToPDF = (queryData) => {
         continue;
       }
       
-      // Regular text
+      // Regular paragraph
       checkPageBreak(8);
       const cleanLine = line.replace(/\*\*/g, '').trim();
       if (cleanLine) {
@@ -143,27 +153,23 @@ export const exportToPDF = (queryData) => {
     }
   }
   
-  // Save
+  // Save PDF
   const filename = `${queryData.company_name}_analysis_${queryData.query_id}.pdf`;
   doc.save(filename);
 };
 
 /**
- * Export analysis to Word (.docx) - Enhanced version
+ * Export analysis to Word (.docx)
  */
 export const exportToWord = async (queryData) => {
-  // Split analysis into sections
   const sections = queryData.analysis.split('\n').filter(line => line.trim());
   
   const children = [
-    // Title
     new Paragraph({
       text: 'Competitive Intelligence Report',
       heading: HeadingLevel.HEADING_1,
       spacing: { after: 400 },
     }),
-    
-    // Metadata
     new Paragraph({
       children: [
         new TextRun({ text: 'Company: ', bold: true }),
@@ -171,7 +177,6 @@ export const exportToWord = async (queryData) => {
       ],
       spacing: { after: 200 },
     }),
-    
     new Paragraph({
       children: [
         new TextRun({ text: 'Query: ', bold: true }),
@@ -179,7 +184,6 @@ export const exportToWord = async (queryData) => {
       ],
       spacing: { after: 200 },
     }),
-    
     new Paragraph({
       children: [
         new TextRun({ text: 'Competitors: ', bold: true }),
@@ -187,7 +191,6 @@ export const exportToWord = async (queryData) => {
       ],
       spacing: { after: 200 },
     }),
-    
     new Paragraph({
       children: [
         new TextRun({ text: 'Generated: ', bold: true }),
@@ -195,7 +198,6 @@ export const exportToWord = async (queryData) => {
       ],
       spacing: { after: 200 },
     }),
-    
     new Paragraph({
       children: [
         new TextRun({ text: 'Status: ', bold: true }),
@@ -203,8 +205,6 @@ export const exportToWord = async (queryData) => {
       ],
       spacing: { after: 400 },
     }),
-    
-    // Analysis heading
     new Paragraph({
       text: 'Analysis',
       heading: HeadingLevel.HEADING_2,
@@ -212,42 +212,43 @@ export const exportToWord = async (queryData) => {
     }),
   ];
   
-  // Add analysis content with proper formatting
   sections.forEach((line) => {
     const cleanLine = line.replace(/\*\*/g, '');
     
     if (line.startsWith('# ')) {
-      // Main heading
       children.push(new Paragraph({
         text: cleanLine.substring(2),
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 400, after: 200 },
       }));
     } else if (line.startsWith('## ')) {
-      // Sub heading
-      children.push(new Paragraph({
-        text: cleanLine.substring(3),
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 300, after: 150 },
-      }));
+      // Special handling: Risk / Recommendation not bold
+      if (line.startsWith('## Risk') || line.startsWith('## Recommendation')) {
+        children.push(new Paragraph({
+          text: cleanLine.substring(3),
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 300, after: 150 },
+        }));
+      } else {
+        children.push(new Paragraph({
+          text: cleanLine.substring(3),
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 300, after: 150 },
+        }));
+      }
     } else if (line.startsWith('### ')) {
-      // Sub-sub heading
       children.push(new Paragraph({
         text: cleanLine.substring(4),
         heading: HeadingLevel.HEADING_3,
         spacing: { before: 200, after: 100 },
       }));
     } else if (line.startsWith('- ') || line.startsWith('* ')) {
-      // Bullet point
       children.push(new Paragraph({
         text: cleanLine.substring(2),
-        bullet: {
-          level: 0
-        },
+        bullet: { level: 0 },
         spacing: { after: 100 },
       }));
     } else if (line.trim()) {
-      // Regular paragraph
       children.push(new Paragraph({
         text: cleanLine,
         spacing: { after: 200 },
@@ -255,14 +256,8 @@ export const exportToWord = async (queryData) => {
     }
   });
   
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children: children,
-    }],
-  });
+  const doc = new Document({ sections: [{ properties: {}, children }] });
   
-  // Generate and save
   const blob = await Packer.toBlob(doc);
   const filename = `${queryData.company_name}_analysis_${queryData.query_id}.docx`;
   saveAs(blob, filename);
