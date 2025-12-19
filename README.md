@@ -442,15 +442,134 @@ Response: 200 OK
 ## 🧪 Testing
 
 ### Backend Tests
+
+**Prerequisites:**
+- Virtual environment must be activated
+- All dependencies installed (`pip install -r requirements.txt`)
+- `.env` file configured with API keys (MongoDB, OpenAI, Tavily)
+
+**Run all tests:**
 ```bash
 cd backend
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pytest -v
 ```
 
+**Run specific test file:**
+```bash
+pytest -v test_api.py           # API endpoint tests
+pytest -v test_workflow.py      # LangGraph workflow tests
+pytest -v test_mongodb.py       # MongoDB service tests
+pytest -v test_pipeline.py      # Complete pipeline tests
+pytest -v test_config.py        # Configuration tests
+```
+
+**Run specific test:**
+```bash
+pytest -v test_api.py::test_health_check
+pytest -v test_workflow.py::test_langgraph_workflow
+```
+
+**Test options:**
+- `-v` or `--verbose`: Show detailed output with test names
+- `-s`: Show print statements and logs
+- `--collect-only`: Show which tests would be run without executing them
+
+**Test Categories:**
+
+1. **Unit/Component Tests** (run without server):
+   - `test_config.py` - Configuration loading
+   - `test_mongodb.py` - MongoDB connection and operations
+   - `test_workflow.py` - LangGraph workflow orchestration
+   - `test_pipeline.py` - Complete agent pipeline
+
+2. **API Integration Tests** (require FastAPI server):
+   - `test_api.py` - All API endpoint tests
+   - These tests will be **skipped** if the server is not running
+
+**To run API integration tests:**
+
+1. Start the FastAPI server in one terminal:
+   ```bash
+   cd backend
+   source venv/bin/activate
+   python -m app.main
+   # Or: uvicorn app.main:app --reload
+   ```
+
+2. Run tests in another terminal:
+   ```bash
+   cd backend
+   source venv/bin/activate
+   pytest -v
+   ```
+
+**Expected output:**
+- Unit/component tests will pass without server (5+ tests)
+- API tests will be skipped if server is not running
+- All tests will run and pass if server is running
+
+**Note:** The test suite uses `pytest-asyncio` for async test support, configured via `pytest.ini`.
+
 ### Frontend Tests
+
+**Prerequisites:**
+- All dependencies installed (`npm install`)
+- Node.js 18+ required
+
+**Run all tests:**
 ```bash
 cd frontend
 npm test
+```
+
+**Run tests in watch mode:**
+```bash
+npm test  # Runs in watch mode by default
+```
+
+**Run tests once (CI mode):**
+```bash
+npm test -- --run
+```
+
+**Run specific test file:**
+```bash
+npm test -- src/components/LoadingSpinner.test.jsx
+npm test -- src/components/QueryForm.test.jsx
+npm test -- src/pages/HomePage.test.jsx
+```
+
+**Test options:**
+- `--run`: Run tests once and exit (useful for CI)
+- `--ui`: Open Vitest UI in browser
+- `--coverage`: Generate coverage report
+
+**Test Framework:**
+- **Vitest** - Fast Vite-native unit test framework
+- **React Testing Library** - Simple and complete React DOM testing utilities
+- **jsdom** - DOM implementation for Node.js
+
+**Test Files:**
+- `src/components/LoadingSpinner.test.jsx` - Tests for loading spinner component
+- `src/components/QueryForm.test.jsx` - Tests for query form including auto-discovery, freshness filter, and form validation
+- `src/pages/HomePage.test.jsx` - Tests for homepage layout and components
+
+**Test Coverage:**
+- Component rendering
+- User interactions (typing, clicking, selecting)
+- Form validation
+- State management
+- API integration (mocked)
+
+**Expected output:**
+```
+✓ src/components/LoadingSpinner.test.jsx (3 tests)
+✓ src/pages/HomePage.test.jsx (4 tests)
+✓ src/components/QueryForm.test.jsx (7 tests)
+
+Test Files  3 passed (3)
+     Tests  14 passed (14)
 ```
 
 ### Manual Testing Checklist
