@@ -2,6 +2,8 @@
 
 An AI-powered competitive intelligence platform that analyzes competitors using multi-agent architecture with LangGraph orchestration. Get comprehensive insights on pricing, features, market positioning, and strategic recommendations.
 
+URL: https://d13qhhlvt9ye93.cloudfront.net
+
 ![Platform Screenshot](docs/screenshot.png)
 
 ## 🌟 Features
@@ -589,8 +591,6 @@ npm run build
 aws s3 sync dist/ s3://your-bucket-name
 ```
 
-**See [docs/deployment-guide.md](docs/deployment-guide.md) for detailed instructions.**
-
 ## 🐛 Troubleshooting
 
 ### Backend won't start
@@ -635,10 +635,6 @@ npm install
 - If discovery fails, try manual competitor entry as fallback
 - Discovery uses GPT-4o which may have rate limits
 
-## 📝 License
-
-MIT License - See [LICENSE](LICENSE) file for details
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
@@ -647,11 +643,6 @@ Contributions are welcome! Please:
 3. Make your changes
 4. Submit a pull request
 
-## 📧 Contact
-
-For questions or support:
-- GitHub Issues: [github.com/yourusername/repo/issues](https://github.com/yourusername/repo/issues)
-- Email: your.email@example.com
 
 ## 🙏 Acknowledgments
 
@@ -664,4 +655,4 @@ For questions or support:
 
 ---
 
-**Built with ❤️ using AI agents and LangGraph**
+**Built using Tavily and LangGraph**
