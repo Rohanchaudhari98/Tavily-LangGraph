@@ -2,7 +2,8 @@
 
 An AI-powered competitive intelligence platform that analyzes competitors using multi-agent architecture with LangGraph orchestration. Get comprehensive insights on pricing, features, market positioning, and strategic recommendations.
 
-![Platform Screenshot](docs/screenshot.png)
+<img width="3962" height="6400" alt="frontend10-1" src="https://github.com/user-attachments/assets/15954db3-a663-4857-9330-c9465cda903b" />
+
 
 ## 🌟 Features
 
