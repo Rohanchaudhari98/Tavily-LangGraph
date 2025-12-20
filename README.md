@@ -3,6 +3,7 @@
 An AI-powered competitive intelligence platform that analyzes competitors using multi-agent architecture with LangGraph orchestration. Get comprehensive insights on pricing, features, market positioning, and strategic recommendations.
 
 URL: https://d13qhhlvt9ye93.cloudfront.net
+
 Swagger: https://api.tavilyapp.com/docs
 
 <img width="3962" height="6400" alt="frontend10-1" src="https://github.com/user-attachments/assets/15954db3-a663-4857-9330-c9465cda903b" />
@@ -80,51 +81,9 @@ Swagger: https://api.tavilyapp.com/docs
 - **Markdown:** react-markdown with enhanced prose styling
 
 ### System Architecture
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         User Interface                          │
-│  (React + Tailwind CSS - Dark Gradient Hero, Modern Cards)     │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      FastAPI Backend                            │
-│  • REST API Endpoints                                           │
-│  • Background Job Processing                                    │
-│  • CORS Configuration                                           │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   LangGraph Workflow                            │
-│  ┌──────────────┐  (Optional)                                  │
-│  │  Discovery   │  Auto-discovers competitors                  │
-│  │    Agent     │                                              │
-│  └──────┬───────┘                                              │
-│         │                                                       │
-│         ▼                                                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   Research   │→ │  Extraction  │→ │     Crawl    │         │
-│  │    Agent     │  │    Agent     │  │    Agent     │         │
-│  │(with freshness│  └──────────────┘  └──────────────┘         │
-│  │   filtering) │                                               │
-│  └──────┬───────┘                                               │
-│         │                                                       │
-│         ▼                                                       │
-│  ┌──────────────┐                                              │
-│  │   Analysis   │                                              │
-│  │    Agent     │                                              │
-│  └──────────────┘                                              │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    External Services                            │
-│  • Tavily AI (Search & Summarization)                          │
-│  • OpenAI GPT-4o-mini/GPT-4o (Analysis)                                     │
-│  • MongoDB Atlas (Data Storage)                                │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+![graph](https://github.com/user-attachments/assets/c95c9734-efc0-41bd-99cd-c3fe379df533)
+
 
 ### Data Flow
 
