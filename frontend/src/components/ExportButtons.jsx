@@ -1,9 +1,12 @@
+// Component providing buttons to export query data as PDF or Word
+
 import { exportToPDF, exportToWord } from '../services/exportService';
 import { useState } from 'react';
 
 export default function ExportButtons({ queryData }) {
   const [exporting, setExporting] = useState(null);
 
+  // Trigger PDF export
   const handleExportPDF = async () => {
     setExporting('pdf');
     try {
@@ -16,6 +19,7 @@ export default function ExportButtons({ queryData }) {
     }
   };
 
+  // Trigger Word export
   const handleExportWord = async () => {
     setExporting('word');
     try {
@@ -30,6 +34,7 @@ export default function ExportButtons({ queryData }) {
 
   return (
     <div className="flex gap-3">
+      {/* PDF Export Button */}
       <button
         onClick={handleExportPDF}
         disabled={exporting !== null}
@@ -41,6 +46,7 @@ export default function ExportButtons({ queryData }) {
       >
         {exporting === 'pdf' ? (
           <>
+            {/* Loading spinner */}
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
             <span>Exporting...</span>
           </>
@@ -52,6 +58,7 @@ export default function ExportButtons({ queryData }) {
         )}
       </button>
 
+      {/* Word Export Button */}
       <button
         onClick={handleExportWord}
         disabled={exporting !== null}
@@ -63,6 +70,7 @@ export default function ExportButtons({ queryData }) {
       >
         {exporting === 'word' ? (
           <>
+            {/* Loading spinner */}
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
             <span>Exporting...</span>
           </>

@@ -1,3 +1,5 @@
+// Displays all available charts (pricing, features, risk) for a query
+
 import React from 'react';
 import PricingChart from './PricingChart';
 import FeatureRadar from './FeatureRadar';
@@ -23,21 +25,15 @@ const ChartsView = ({ chartData }) => {
   return (
     <div className="space-y-6">
       {/* Pricing Chart */}
-      {chartData.pricing && chartData.pricing.length > 0 && (
-        <PricingChart data={chartData.pricing} />
-      )}
+      {chartData.pricing && chartData.pricing.length > 0 && <PricingChart data={chartData.pricing} />}
 
       {/* Feature Radar */}
-      {chartData.features && chartData.features.length > 0 && (
-        <FeatureRadar data={chartData.features} />
-      )}
+      {chartData.features && chartData.features.length > 0 && <FeatureRadar data={chartData.features} />}
 
       {/* Risk Matrix */}
-      {chartData.risks && chartData.risks.length > 0 && (
-        <RiskMatrix data={chartData.risks} />
-      )}
+      {chartData.risks && chartData.risks.length > 0 && <RiskMatrix data={chartData.risks} />}
 
-      {/* If no charts available */}
+      {/* Fallback if no charts available */}
       {(!chartData.pricing || chartData.pricing.length === 0) &&
        (!chartData.features || chartData.features.length === 0) &&
        (!chartData.risks || chartData.risks.length === 0) && (

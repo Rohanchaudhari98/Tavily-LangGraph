@@ -1,3 +1,5 @@
+// Displays a radar chart comparing features across multiple companies
+
 import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, ResponsiveContainer, Tooltip } from 'recharts';
 

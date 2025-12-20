@@ -1,8 +1,11 @@
+// Component for adding and managing competitor names
+
 import { useState } from 'react';
 
 export default function CompetitorInput({ competitors, setCompetitors }) {
   const [inputValue, setInputValue] = useState('');
 
+  // Add a competitor to the list
   const addCompetitor = () => {
     if (inputValue.trim() && competitors.length < 10) {
       setCompetitors([...competitors, inputValue.trim()]);
@@ -10,10 +13,12 @@ export default function CompetitorInput({ competitors, setCompetitors }) {
     }
   };
 
+  // Remove a competitor by index
   const removeCompetitor = (index) => {
     setCompetitors(competitors.filter((_, i) => i !== index));
   };
 
+  // Handle Enter key submission
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -23,11 +28,12 @@ export default function CompetitorInput({ competitors, setCompetitors }) {
 
   return (
     <div>
+      {/* Field label */}
       <label className="block text-sm font-medium text-gray-700 mb-2">
         Competitors (Max 10)
       </label>
-      
-      {/* List of added competitors */}
+
+      {/* Added competitors list */}
       <div className="space-y-2 mb-3">
         {competitors.map((competitor, index) => (
           <div
@@ -35,6 +41,8 @@ export default function CompetitorInput({ competitors, setCompetitors }) {
             className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
           >
             <span className="text-gray-700">{competitor}</span>
+
+            {/* Remove competitor action */}
             <button
               type="button"
               onClick={() => removeCompetitor(index)}
@@ -46,7 +54,7 @@ export default function CompetitorInput({ competitors, setCompetitors }) {
         ))}
       </div>
 
-      {/* Add competitor input */}
+      {/* Competitor input */}
       {competitors.length < 10 && (
         <div className="flex gap-2">
           <input
@@ -57,6 +65,7 @@ export default function CompetitorInput({ competitors, setCompetitors }) {
             placeholder="Enter competitor name"
             className="input-field flex-1"
           />
+
           <button
             type="button"
             onClick={addCompetitor}
@@ -68,6 +77,7 @@ export default function CompetitorInput({ competitors, setCompetitors }) {
         </div>
       )}
 
+      {/* Validation message */}
       {competitors.length === 0 && (
         <p className="text-sm text-red-600 mt-2">
           Please add at least one competitor

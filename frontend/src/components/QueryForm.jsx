@@ -1,3 +1,5 @@
+// Form component to create a competitor analysis query
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createQuery } from '../services/api';
@@ -6,24 +8,27 @@ import CompetitorInput from './CompetitorInput';
 export default function QueryForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     company_name: '',
     query: '',
     use_premium_analysis: false,
   });
+
   const [competitors, setCompetitors] = useState([]);
-  
+
   // Auto-discovery state
   const [useAutoDiscovery, setUseAutoDiscovery] = useState(false);
   const [maxCompetitors, setMaxCompetitors] = useState(5);
-  
+
   // Freshness filter state
   const [freshness, setFreshness] = useState('anytime');
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation: Need competitors OR auto-discovery
+    // Validation: Require competitors or auto-discovery
     if (!useAutoDiscovery && competitors.length === 0) {
       alert('Please add at least one competitor or enable auto-discovery');
       return;
@@ -37,7 +42,7 @@ export default function QueryForm() {
         competitors: useAutoDiscovery ? [] : competitors,
         use_auto_discovery: useAutoDiscovery,
         max_competitors: maxCompetitors,
-        freshness: freshness, 
+        freshness: freshness,
       };
 
       const response = await createQuery(requestData);
@@ -53,6 +58,7 @@ export default function QueryForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <div className="space-y-5">
+
         {/* Company Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -99,7 +105,7 @@ export default function QueryForm() {
               <p className="text-sm text-gray-600">Filter search results by time range</p>
             </div>
           </div>
-          
+
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Time Range
           </label>
@@ -133,25 +139,25 @@ export default function QueryForm() {
                 <p className="text-sm text-gray-600">Let AI find competitors automatically</p>
               </div>
             </div>
-            
+
             {/* Toggle Switch */}
             <button
-  type="button"
-  onClick={() => setUseAutoDiscovery(!useAutoDiscovery)}
-  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors
-    ${useAutoDiscovery 
-      ? 'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900' 
-      : 'bg-gray-300'
-    }`}
->
-  <span
-    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-      useAutoDiscovery ? 'translate-x-7' : 'translate-x-1'
-    }`}
-  />
-</button>
+              type="button"
+              onClick={() => setUseAutoDiscovery(!useAutoDiscovery)}
+              className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors
+                ${useAutoDiscovery 
+                  ? 'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900' 
+                  : 'bg-gray-300'
+                }`}
+            >
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                  useAutoDiscovery ? 'translate-x-7' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
-          
+
           {/* Max Competitors Selector - Only show when auto-discovery is ON */}
           {useAutoDiscovery && (
             <div className="mt-4 pt-4 border-t border-blue-200">
@@ -212,7 +218,7 @@ export default function QueryForm() {
           >
             {loading ? 'Submitting...' : 'Analyze Competitors'}
           </button>
-          
+
           <button
             type="button"
             onClick={() => navigate('/history')}

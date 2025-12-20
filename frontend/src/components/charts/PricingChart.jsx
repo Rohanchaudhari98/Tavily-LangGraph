@@ -1,3 +1,5 @@
+// Displays a bar chart comparing pricing across multiple companies
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -17,7 +19,6 @@ const PricingChart = ({ data }) => {
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Comparison</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          {/* Gradient definition */}
           <defs>
             <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#2563EB" stopOpacity={0.9} />
@@ -43,7 +44,7 @@ const PricingChart = ({ data }) => {
                   dataKey={key}
                   name={key}
                   fill={index === 0 ? 'url(#blueGradient)' : accentColors[(index - 1) % accentColors.length]}
-                  radius={[4, 4, 0, 0]} // rounded top corners
+                  radius={[4, 4, 0, 0]}
                 />
               ))}
         </BarChart>

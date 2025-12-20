@@ -1,3 +1,5 @@
+// Displays query results with analysis, charts, research, and metadata
+
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -8,6 +10,7 @@ export default function ResultsDisplay({ queryData }) {
   const [activeTab, setActiveTab] = useState('analysis');
   const [activeSubTab, setActiveSubTab] = useState('narrative');
 
+  // Show message if no data
   if (!queryData) {
     return (
       <div className="card p-12 text-center">
@@ -19,6 +22,7 @@ export default function ResultsDisplay({ queryData }) {
   const totalAgents = queryData.total_agents || (queryData.use_auto_discovery ? 5 : 4);
   const completedAgentsCount = queryData.completed_agents?.length || 0;
 
+  // Format freshness for display
   const formatFreshness = (freshness) => {
     const freshnessMap = {
       anytime: 'Anytime (All results)',
@@ -30,35 +34,18 @@ export default function ResultsDisplay({ queryData }) {
     return freshnessMap[freshness] || 'Anytime';
   };
 
+  // Render status badge
   const renderStatus = () => {
     const statusConfig = {
-      processing: {
-        className: 'status-badge-processing',
-        icon: '⏳',
-        label: 'Processing',
-        animate: true
-      },
-      completed: {
-        className: 'status-badge-completed',
-        icon: '✓',
-        label: 'Completed',
-        animate: false
-      },
-      failed: {
-        className: 'status-badge-failed',
-        icon: '✗',
-        label: 'Failed',
-        animate: false
-      },
+      processing: { className: 'status-badge-processing', icon: '⏳', label: 'Processing', animate: true },
+      completed: { className: 'status-badge-completed', icon: '✓', label: 'Completed', animate: false },
+      failed: { className: 'status-badge-failed', icon: '✗', label: 'Failed', animate: false },
     };
-
     const config = statusConfig[queryData.status] || statusConfig.completed;
 
     return (
       <span className={config.className}>
-        <span className={config.animate ? 'animate-pulse mr-1.5' : 'mr-1.5'}>
-          {config.icon}
-        </span>
+        <span className={config.animate ? 'animate-pulse mr-1.5' : 'mr-1.5'}>{config.icon}</span>
         {config.label}
       </span>
     );
@@ -77,19 +64,15 @@ export default function ResultsDisplay({ queryData }) {
 
   return (
     <div className="space-y-8">
-      {/* Header / Hero Card – only color changed */}
+      {/* Header / Hero Card */}
       <div className="relative overflow-hidden rounded-2xl">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900"></div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-700 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
         <div className="relative p-8">
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
-              <h2 className="text-3xl font-extrabold text-white mb-2">
-                {queryData.company_name}
-              </h2>
-              <p className="text-xl text-blue-100 leading-relaxed">
-                {queryData.query}
-              </p>
+              <h2 className="text-3xl font-extrabold text-white mb-2">{queryData.company_name}</h2>
+              <p className="text-xl text-blue-100 leading-relaxed">{queryData.query}</p>
             </div>
             {renderStatus()}
           </div>
@@ -98,36 +81,27 @@ export default function ResultsDisplay({ queryData }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center hover:bg-white/15 transition-all">
               <div className="text-white/80 text-sm mb-1">Competitors</div>
-              <div className="text-3xl font-bold text-white">
-                {queryData.competitors.length}
-              </div>
+              <div className="text-3xl font-bold text-white">{queryData.competitors.length}</div>
             </div>
-            
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center hover:bg-white/15 transition-all">
               <div className="text-white/80 text-sm mb-1">Created</div>
               <div className="text-lg font-semibold text-white">
-                {new Date(queryData.created_at).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-                })}
+                {new Date(queryData.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </div>
             </div>
-            
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center hover:bg-white/15 transition-all">
               <div className="text-white/80 text-sm mb-1">Mode</div>
               <div className="text-lg font-semibold text-white">
                 {queryData.analysis_mode === 'premium' ? '⭐ Premium' : 'Standard'}
               </div>
             </div>
-            
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center hover:bg-white/15 transition-all">
               <div className="text-white/80 text-sm mb-1">Progress</div>
-              <div className="text-lg font-semibold text-white">
-                {completedAgentsCount}/{totalAgents} agents
-              </div>
+              <div className="text-lg font-semibold text-white">{completedAgentsCount}/{totalAgents} agents</div>
             </div>
           </div>
 
+          {/* Export Section */}
           {queryData.status === 'completed' && (
             <div className="mt-6 pt-6 border-t border-white/20">
               <div className="flex items-center justify-between">
@@ -147,7 +121,7 @@ export default function ResultsDisplay({ queryData }) {
         {/* Main Tabs */}
         <div className="border-b-2 border-gray-200 mb-8">
           <nav className="flex space-x-8 -mb-px">
-            {tabs.filter(tab => tab.show).map((tab) => (
+            {tabs.filter(tab => tab.show).map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -164,13 +138,14 @@ export default function ResultsDisplay({ queryData }) {
         </div>
 
         <div>
+          {/* Analysis Tab */}
           {activeTab === 'analysis' && (
             <div>
               {queryData.status === 'completed' && queryData.analysis ? (
                 <div>
                   {/* Sub-tabs */}
                   <div className="flex space-x-1 mb-6 border-b border-gray-200">
-                    {subTabs.map((tab) => (
+                    {subTabs.map(tab => (
                       <button
                         key={tab.id}
                         onClick={() => setActiveSubTab(tab.id)}
@@ -186,7 +161,7 @@ export default function ResultsDisplay({ queryData }) {
                     ))}
                   </div>
 
-                  {/* 🔹 Enhanced Narrative Section */}
+                  {/* Narrative Section */}
                   {activeSubTab === 'narrative' && (
                     <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
                       <ReactMarkdown
@@ -205,12 +180,8 @@ export default function ResultsDisplay({ queryData }) {
                               <table className="table-auto border-collapse border border-gray-300 w-full" {...props} />
                             </div>
                           ),
-                          th: ({ node, ...props }) => (
-                            <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />
-                          ),
-                          td: ({ node, ...props }) => (
-                            <td className="border border-gray-300 px-3 py-1" {...props} />
-                          ),
+                          th: ({ node, ...props }) => <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />,
+                          td: ({ node, ...props }) => <td className="border border-gray-300 px-3 py-1" {...props} />,
                         }}
                       >
                         {queryData.analysis}
@@ -218,11 +189,11 @@ export default function ResultsDisplay({ queryData }) {
                     </div>
                   )}
 
-                  {activeSubTab === 'charts' && (
-                    <ChartsView chartData={queryData.chart_data} />
-                  )}
+                  {/* Charts Section */}
+                  {activeSubTab === 'charts' && <ChartsView chartData={queryData.chart_data} />}
                 </div>
               ) : queryData.status === 'processing' ? (
+                // Processing UI
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
@@ -237,6 +208,7 @@ export default function ResultsDisplay({ queryData }) {
                   </div>
                 </div>
               ) : (
+                // Failed / unavailable
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="text-4xl">⚠️</span>
@@ -255,6 +227,7 @@ export default function ResultsDisplay({ queryData }) {
             </div>
           )}
 
+          {/* Research Tab */}
           {activeTab === 'research' && (
             <div className="space-y-6">
               {queryData.research_results?.map((result, index) => (
@@ -277,12 +250,7 @@ export default function ResultsDisplay({ queryData }) {
                           <ul className="space-y-2">
                             {result.results.slice(0, 3).map((source, i) => (
                               <li key={i}>
-                                <a
-                                  href={source.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-start gap-2"
-                                >
+                                <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-start gap-2">
                                   <span className="text-gray-400 mt-1">→</span>
                                   <span>{source.title}</span>
                                 </a>
@@ -302,7 +270,8 @@ export default function ResultsDisplay({ queryData }) {
             </div>
           )}
 
-{activeTab === 'metadata' && (
+          {/* Metadata Tab */}
+          {activeTab === 'metadata' && (
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
@@ -316,11 +285,8 @@ export default function ResultsDisplay({ queryData }) {
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-blue-200">
                     <dt className="text-sm font-medium text-gray-600">Discovery Mode:</dt>
-                    <dd className="text-sm font-semibold text-gray-900">
-                      {queryData.use_auto_discovery ? '🔍 Auto-Discovery' : '📋 Manual Entry'}
-                    </dd>
+                    <dd className="text-sm font-semibold text-gray-900">{queryData.use_auto_discovery ? '🔍 Auto-Discovery' : '📋 Manual Entry'}</dd>
                   </div>
-                  {/* Freshness Filter Display */}
                   <div className="flex justify-between items-center py-2 border-b border-blue-200">
                     <dt className="text-sm font-medium text-gray-600">Freshness Filter:</dt>
                     <dd className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -345,6 +311,7 @@ export default function ResultsDisplay({ queryData }) {
                 </dl>
               </div>
 
+              {/* Processing Details */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
                   <span>⚙️</span>
