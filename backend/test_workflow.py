@@ -25,11 +25,11 @@ async def test_langgraph_workflow():
     """
     
     print("\n" + "="*70)
-    print("🧪 LANGGRAPH WORKFLOW TEST")
+    print("LANGGRAPH WORKFLOW TEST")
     print("="*70)
     
     # ===== STEP 1: CREATE WORKFLOW =====
-    print("\n📋 STEP 1: Creating LangGraph Workflow...")
+    print("\nSTEP 1: Creating LangGraph Workflow...")
     
     workflow = create_competitive_intelligence_workflow(
         tavily_api_key=settings.tavily_api_key,
@@ -37,10 +37,10 @@ async def test_langgraph_workflow():
         use_premium_analysis=False  # Standard mode for testing
     )
     
-    print("✅ Workflow created successfully!")
+    print("Workflow created successfully!")
     
     # ===== STEP 2: PREPARE INITIAL STATE =====
-    print("\n📋 STEP 2: Preparing Initial State...")
+    print("\nSTEP 2: Preparing Initial State...")
     
     initial_state = create_initial_state(
         query="AI search API pricing and features",
@@ -52,13 +52,13 @@ async def test_langgraph_workflow():
         ]
     )
     
-    print(f"✅ Initial state prepared:")
+    print(f"   Initial state prepared:")
     print(f"   - Query: {initial_state['query']}")
     print(f"   - Company: {initial_state['company_name']}")
     print(f"   - Competitors: {len(initial_state['competitors'])}")
     
     # ===== STEP 3: EXECUTE WORKFLOW =====
-    print("\n📋 STEP 3: Executing Workflow...")
+    print("\n STEP 3: Executing Workflow...")
     print("   This will run all 4 agents in sequence:")
     print("   Research → Extraction → Crawl → Analysis")
     print()
@@ -70,24 +70,24 @@ async def test_langgraph_workflow():
     
     execution_time = time.time() - start_time
     
-    print(f"\n✅ Workflow completed in {execution_time:.2f}s")
+    print(f"\nWorkflow completed in {execution_time:.2f}s")
     
     # ===== STEP 4: VALIDATE RESULTS =====
-    print("\n📋 STEP 4: Validating Results...")
+    print("\nSTEP 4: Validating Results...")
     
     # Check research results
     research_success = sum(
         1 for r in final_state['research_results'] 
         if r.get('status') == 'success'
     )
-    print(f"✅ Research: {research_success}/{len(final_state['competitors'])} competitors")
+    print(f"Research: {research_success}/{len(final_state['competitors'])} competitors")
     
     # Check extraction results
     extraction_success = sum(
         1 for e in final_state['extracted_data']
         if e.get('status') == 'success'
     )
-    print(f"✅ Extraction: {extraction_success} pages extracted")
+    print(f"Extraction: {extraction_success} pages extracted")
     
     # Check crawl results
     crawl_success = sum(
@@ -99,31 +99,31 @@ async def test_langgraph_workflow():
         for c in final_state['crawl_results']
         if c.get('status') == 'success'
     )
-    print(f"✅ Crawl: {crawl_success} sites crawled, {total_pages_crawled} pages discovered")
+    print(f"Crawl: {crawl_success} sites crawled, {total_pages_crawled} pages discovered")
     
     # Check analysis
     if final_state.get('analysis'):
         analysis_length = len(final_state['analysis'])
-        print(f"✅ Analysis: Generated ({analysis_length:,} characters)")
+        print(f"Analysis: Generated ({analysis_length:,} characters)")
     else:
-        print(f"❌ Analysis: Failed")
+        print(f"Analysis: Failed")
     
     # Check completed agents
     completed = final_state.get('completed_agents', [])
-    print(f"\n✅ Completed agents: {', '.join(completed)}")
+    print(f"\nCompleted agents: {', '.join(completed)}")
     
     # Check errors
     errors = final_state.get('errors', [])
     if errors:
-        print(f"\n⚠️  Errors encountered: {len(errors)}")
+        print(f"\nErrors encountered: {len(errors)}")
         for error in errors:
             print(f"   - {error}")
     else:
-        print(f"\n✅ No errors!")
+        print(f"\nNo errors!")
     
     # ===== STEP 5: DISPLAY SAMPLE OUTPUT =====
     print("\n" + "="*70)
-    print("📊 SAMPLE OUTPUT")
+    print("SAMPLE OUTPUT")
     print("="*70)
     
     if final_state.get('analysis'):
@@ -133,9 +133,9 @@ async def test_langgraph_workflow():
         print(f"\n... [truncated, full analysis is {len(final_state['analysis']):,} characters]")
     
     print("\n" + "="*70)
-    print("✅ LANGGRAPH TEST COMPLETE!")
+    print("LANGGRAPH TEST COMPLETE!")
     print("="*70)
-    print(f"\n📊 Summary:")
+    print(f"\n Summary:")
     print(f"   - Workflow execution time: {execution_time:.2f}s")
     print(f"   - Competitors analyzed: {len(final_state['competitors'])}")
     print(f"   - Research results: {len(final_state['research_results'])}")
@@ -155,7 +155,7 @@ async def test_workflow_state_flow():
     """
     
     print("\n" + "="*70)
-    print("🔄 STATE FLOW TEST")
+    print(" STATE FLOW TEST")
     print("="*70)
     
     print("\nThis test verifies that state is properly passed between agents.")
@@ -172,17 +172,17 @@ async def test_workflow_state_flow():
         competitors=["Competitor A"]
     )
     
-    print("\n📋 Initial State:")
+    print("\n Initial State:")
     print(f"   - research_results: {len(initial_state['research_results'])} (should be 0)")
     print(f"   - extracted_data: {len(initial_state['extracted_data'])} (should be 0)")
     print(f"   - crawl_results: {len(initial_state['crawl_results'])} (should be 0)")
     print(f"   - analysis: {initial_state['analysis']} (should be None)")
     print(f"   - completed_agents: {initial_state['completed_agents']} (should be [])")
     
-    print("\n🚀 Running workflow...")
+    print("\n Running workflow...")
     final_state = await workflow.ainvoke(initial_state)
     
-    print("\n📋 Final State:")
+    print("\n Final State:")
     print(f"   - research_results: {len(final_state['research_results'])} (should be > 0)")
     print(f"   - extracted_data: {len(final_state['extracted_data'])} (should be > 0)")
     print(f"   - crawl_results: {len(final_state['crawl_results'])} (should be > 0)")
@@ -193,17 +193,17 @@ async def test_workflow_state_flow():
     expected_agents = ['research', 'extraction', 'crawl', 'analysis']
     completed = final_state.get('completed_agents', [])
     
-    print("\n✅ Validation:")
+    print("\n Validation:")
     for agent in expected_agents:
         if agent in completed:
-            print(f"   ✅ {agent} completed")
+            print(f"     {agent} completed")
         else:
-            print(f"   ❌ {agent} NOT completed")
+            print(f"     {agent} NOT completed")
     
     if set(expected_agents) == set(completed):
-        print("\n✅ STATE FLOW TEST PASSED!")
+        print("\n STATE FLOW TEST PASSED!")
     else:
-        print("\n❌ STATE FLOW TEST FAILED!")
+        print("\n STATE FLOW TEST FAILED!")
     
     print("="*70 + "\n")
 
@@ -211,7 +211,7 @@ async def test_workflow_state_flow():
 async def main():
     """Run all LangGraph tests"""
     
-    print("\n" + "🧪 RUNNING LANGGRAPH TESTS")
+    print("\n" + "RUNNING LANGGRAPH TESTS")
     
     # Test 1: Full workflow
     await test_langgraph_workflow()
@@ -219,7 +219,7 @@ async def main():
     # Test 2: State flow
     await test_workflow_state_flow()
     
-    print("✅ ALL TESTS COMPLETE!\n")
+    print("ALL TESTS COMPLETE!\n")
 
 
 if __name__ == "__main__":

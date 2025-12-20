@@ -52,14 +52,14 @@ class CrawlAgent:
         research_results = state.get("research_results", [])
         
         if not research_results:
-            logger.warning("⚠️  No research results to crawl from")
+            logger.warning("No research results to crawl from")
             return {
                 **state,
                 "crawl_results": [],
                 "errors": state.get("errors", []) + ["No research results for crawling"]
             }
         
-        logger.info(f"🕷️ Crawl Agent starting...")
+        logger.info(f"Crawl Agent starting...")
         
         # Collect URLs to crawl
         urls_to_crawl = self._collect_crawl_urls(research_results)
@@ -67,7 +67,7 @@ class CrawlAgent:
         logger.info(f"Found {len(urls_to_crawl)} URLs to deep crawl")
         
         if not urls_to_crawl:
-            logger.warning("⚠️  No valid URLs found for crawling")
+            logger.warning("No valid URLs found for crawling")
             return {
                 **state,
                 "crawl_results": [],
@@ -82,14 +82,14 @@ class CrawlAgent:
             for item in urls_to_crawl
         ]
         
-        logger.info(f"🚀 Crawling {len(tasks)} competitor sites in parallel...")
+        logger.info(f"Crawling {len(tasks)} competitor sites in parallel...")
         crawl_results = await asyncio.gather(*tasks, return_exceptions=True)
         
         # Handle exceptions
         processed_results = []
         for i, result in enumerate(crawl_results):
             if isinstance(result, Exception):
-                logger.error(f"❌ Crawl failed for {urls_to_crawl[i]['competitor']}: {str(result)}")
+                logger.error(f"Crawl failed for {urls_to_crawl[i]['competitor']}: {str(result)}")
                 processed_results.append({
                     "competitor": urls_to_crawl[i]["competitor"],
                     "url": urls_to_crawl[i]["url"],
@@ -102,7 +102,7 @@ class CrawlAgent:
         
         # Count successes
         success_count = sum(1 for r in processed_results if r.get("status") == "success")
-        logger.info(f"✅ Crawl complete. {success_count}/{len(processed_results)} successful")
+        logger.info(f"Crawl complete. {success_count}/{len(processed_results)} successful")
         
         # Update state
         return {
@@ -127,7 +127,7 @@ class CrawlAgent:
         start_url = item["url"]
         focus = item.get("focus", "pricing")
         
-        logger.info(f"🕷️ Crawling {competitor} - {focus} section from {start_url[:60]}...")
+        logger.info(f"Crawling {competitor} - {focus} section from {start_url[:60]}...")
         
         try:
             # Use Tavily's search with site-specific query to simulate crawl
@@ -163,7 +163,7 @@ class CrawlAgent:
             # Combine all content
             combined_content = "\n\n---PAGE BREAK---\n\n".join(all_content)
             
-            logger.info(f"✅ Crawled {len(urls_found)} pages from {competitor} ({len(combined_content)} chars)")
+            logger.info(f"Crawled {len(urls_found)} pages from {competitor} ({len(combined_content)} chars)")
             
             return {
                 "competitor": competitor,
@@ -178,7 +178,7 @@ class CrawlAgent:
             }
             
         except Exception as e:
-            logger.error(f"❌ Crawl error for {competitor}: {str(e)}")
+            logger.error(f"Crawl error for {competitor}: {str(e)}")
             return {
                 "competitor": competitor,
                 "start_url": start_url,

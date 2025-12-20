@@ -53,10 +53,10 @@ class AnalysisAgent:
         # Model selection
         if use_premium:
             self.model = "gpt-4o"  # Premium: Better quality, slower, ~60x more expensive
-            logger.info("🌟 Analysis Agent initialized with PREMIUM mode (gpt-4o)")
+            logger.info("Analysis Agent initialized with PREMIUM mode (gpt-4o)")
         else:
             self.model = "gpt-4o-mini"  # Standard: Fast, cheap, good quality
-            logger.info("⚡ Analysis Agent initialized with STANDARD mode (gpt-4o-mini)")
+            logger.info("Analysis Agent initialized with STANDARD mode (gpt-4o-mini)")
     
     async def execute(self, state: Dict) -> Dict:
         """
@@ -75,7 +75,7 @@ class AnalysisAgent:
         company_name = state.get("company_name", "Your Company")
         competitors = state.get("competitors", [])
         
-        logger.info(f"🧠 Analysis Agent starting...")
+        logger.info(f"   Analysis Agent starting...")
         logger.info(f"   Mode: {'PREMIUM (gpt-4o)' if self.use_premium else 'STANDARD (gpt-4o-mini)'}")
         logger.info(f"   Company: {company_name}")
         logger.info(f"   Query: {query}")
@@ -85,7 +85,7 @@ class AnalysisAgent:
         
         # Validate we have data to analyze
         if not research_results and not extracted_data and not crawl_results:
-            logger.warning("⚠️  No data to analyze")
+            logger.warning("No data to analyze")
             return {
                 **state,
                 "analysis": None,
@@ -105,7 +105,7 @@ class AnalysisAgent:
             crawl_results
         )
         
-        logger.info(f"📊 Context prepared: {len(analysis_context)} characters")
+        logger.info(f"Context prepared: {len(analysis_context)} characters")
         
         try:
             # Generate analysis using GPT-4
@@ -116,7 +116,7 @@ class AnalysisAgent:
                 analysis_context
             )
             
-            logger.info(f"✅ Analysis complete: {len(analysis_result)} characters")
+            logger.info(f"Analysis complete: {len(analysis_result)} characters")
             
             # Extract chart data from analysis
             chart_data = await self._extract_chart_data(
@@ -136,7 +136,7 @@ class AnalysisAgent:
             }
             
         except Exception as e:
-            logger.error(f"❌ Analysis failed: {str(e)}")
+            logger.error(f"Analysis failed: {str(e)}")
             return {
                 **state,
                 "analysis": None,
@@ -372,7 +372,7 @@ Focus on answering the specific query "{query}" while providing strategic contex
 Remember to skip section 6 (Additional Insights) if the query only asks about standard topics 
 like pricing, features, positioning, or risks."""
 
-        logger.info(f"🤖 Calling {self.model} for {company_name}...")
+        logger.info(f"Calling {self.model} for {company_name}...")
         
         # OpenAI client is synchronous, wrap in executor for async
         loop = asyncio.get_event_loop()
@@ -386,7 +386,7 @@ like pricing, features, positioning, or risks."""
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.3,  # Lower temperature for more focused analysis
-                max_tokens=3000  # Increased to accommodate risk analysis section
+                max_tokens=3000
             )
         )
         
@@ -394,7 +394,7 @@ like pricing, features, positioning, or risks."""
         
         # Log token usage for monitoring
         usage = response.usage
-        logger.info(f"📊 Token usage: {usage.total_tokens} total "
+        logger.info(f"Token usage: {usage.total_tokens} total "
                 f"({usage.prompt_tokens} prompt + {usage.completion_tokens} completion)")
         
         # Calculate approximate cost
@@ -409,7 +409,7 @@ like pricing, features, positioning, or risks."""
             completion_cost = usage.completion_tokens * 0.0000006  # $0.60 per 1M tokens
             cost = prompt_cost + completion_cost
         
-        logger.info(f"💰 Estimated cost: ${cost:.4f}")
+        logger.info(f"Estimated cost: ${cost:.4f}")
         
         return analysis
     
@@ -437,7 +437,7 @@ like pricing, features, positioning, or risks."""
         """
         
         if not competitors:
-            logger.warning("⚠️  No competitors to create charts for")
+            logger.warning("No competitors to create charts for")
             return None
         
         # Build competitors list for JSON template
@@ -527,7 +527,7 @@ Return the JSON now:"""
             response = await loop.run_in_executor(
                 None,
                 lambda: self.client.chat.completions.create(
-                    model="gpt-4o-mini",  # Use mini for cost efficiency
+                    model="gpt-4o-mini",
                     messages=[
                         {
                             "role": "system",
@@ -565,19 +565,19 @@ Return the JSON now:"""
             if not isinstance(chart_data.get('risks'), list):
                 raise ValueError("Invalid risks data structure")
             
-            logger.info(f"✅ Chart data extracted: {len(chart_data.get('pricing', []))} pricing points, "
+            logger.info(f"Chart data extracted: {len(chart_data.get('pricing', []))} pricing points, "
                        f"{len(chart_data.get('features', []))} features, "
                        f"{len(chart_data.get('risks', []))} risks")
             
             return chart_data
             
         except json.JSONDecodeError as e:
-            logger.error(f"❌ Failed to parse chart data JSON: {str(e)}")
+            logger.error(f"Failed to parse chart data JSON: {str(e)}")
             logger.error(f"Raw response: {chart_data_str[:200]}...")
             return None
             
         except Exception as e:
-            logger.error(f"❌ Chart data extraction failed: {str(e)}")
+            logger.error(f"Chart data extraction failed: {str(e)}")
             return None
     
     def __repr__(self):

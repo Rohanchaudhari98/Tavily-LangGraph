@@ -8,6 +8,7 @@ import logging
 
 from app.api.routes import router
 from app.config import settings
+import uvicorn
 
 # Configure logging
 logging.basicConfig(
@@ -48,28 +49,43 @@ app.include_router(router)
 
 
 @app.get("/")
-async def root():
-    """Health check endpoint"""
+async def root(db: MongoDBService = Depends(get_db)):
+    try:
+        await db.ping()
+        db_status = "ok"
+    except Exception as e:
+        db_status = f"error: {e}"
+
+    all_healthy = db_status == "ok"
+
     return {
         "message": "Competitive Intelligence API",
-        "status": "healthy",
-        "version": "1.0.0",
-        "environment": settings.environment
+        "status": "healthy" if all_healthy else "unhealthy",
+        "db_status": db_status,
+        "environment": settings.environment,
+        "version": "1.0.0"
     }
 
 
 @app.get("/health")
-async def health_check():
-    """Detailed health check"""
+async def root(db: MongoDBService = Depends(get_db)):
+    try:
+        await db.ping()
+        db_status = "ok"
+    except Exception as e:
+        db_status = f"error: {e}"
+
+    all_healthy = db_status == "ok"
+
     return {
-        "status": "healthy",
+        "status": "healthy" if all_healthy else "unhealthy",
+        "db_status": db_status,
         "environment": settings.environment,
         "debug": settings.debug
     }
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(
         "app.main:app",
         host=settings.api_host,

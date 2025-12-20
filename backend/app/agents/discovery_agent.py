@@ -76,7 +76,7 @@ class CompetitorDiscoveryAgent:
             
             # Step 2: Find competitors using Tavily Search
             competitors = await self._find_competitors(
-                company_name, 
+                company_name,
                 company_info,
                 max_competitors=max_competitors
             )
@@ -314,7 +314,7 @@ Return ONLY direct competitors as JSON:
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,  # Very low for consistent, focused results
+                temperature=0.1,
                 response_format={"type": "json_object"}
             )
             

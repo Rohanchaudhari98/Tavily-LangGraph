@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 class ResearchAgent:
     """
     Searches the web for competitive intelligence using Tavily Search API.
-    Now with parallel processing and freshness filtering!
     """
     
     def __init__(self, tavily_api_key: str):
@@ -150,7 +149,7 @@ class ResearchAgent:
             # Tavily client is sync, so wrap in executor
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
-                None,  # Use default executor
+                None,
                 lambda: self.client.search(**search_params)
             )
             

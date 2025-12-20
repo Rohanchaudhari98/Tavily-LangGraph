@@ -116,7 +116,7 @@ def test_create_query(server_available):
     assert "query_id" in result, "No query_id in response!"
     
     query_id = result["query_id"]
-    print(f"\n✓ Query created successfully!")
+    print(f"\nQuery created successfully!")
     print(f"✓ Query ID: {query_id}")
 
 def test_get_query(server_available, query_id):
@@ -168,7 +168,7 @@ def test_list_queries(server_available):
         print(f"      Created: {q['created_at']}")
     
     assert response.status_code == 200, "Failed to list queries!"
-    print(f"\n✓ Queries listed successfully!")
+    print(f"\nQueries listed successfully!")
 
 def test_delete_query(server_available, query_id):
     """Test deleting a query"""
@@ -182,16 +182,16 @@ def test_delete_query(server_available, query_id):
     print(f"Response: {response.json()}")
     
     assert response.status_code == 200, "Failed to delete query!"
-    print(f"\n✓ Query deleted successfully!")
+    print(f"\nQuery deleted successfully!")
     
     # Verify deletion
     print("\nVerifying deletion...")
     response = requests.get(f"{BASE_URL}/api/queries/{query_id}")
     
     if response.status_code == 404:
-        print("✓ Query no longer exists (confirmed)")
+        print("Query no longer exists (confirmed)")
     else:
-        print("⚠ Query still exists (unexpected)")
+        print("Query still exists (unexpected)")
 
 def test_api_documentation(server_available):
     """Test API documentation endpoints"""
@@ -216,7 +216,7 @@ def test_api_documentation(server_available):
 def run_all_tests(wait_for_completion=False):
     """Run all tests in sequence"""
     
-    print("\n" + "🧪 FASTAPI BACKEND TEST SUITE")
+    print("\n" + "FASTAPI BACKEND TEST SUITE")
     print("="*70)
     print(f"\nTesting API at: {BASE_URL}")
     print(f"Wait for completion: {wait_for_completion}")
@@ -242,7 +242,7 @@ def run_all_tests(wait_for_completion=False):
             print(f"\nQuery ID: {query_id}")
             print(f"Status: {result['status']}")
             if result['status'] == 'completed':
-                print(f"✓ Workflow completed successfully!")
+                print(f"Workflow completed successfully!")
                 print(f"\nYou can view the full results at:")
                 print(f"   {BASE_URL}/api/queries/{query_id}")
         
@@ -252,25 +252,25 @@ def run_all_tests(wait_for_completion=False):
         # Summary
         print_section("TEST SUMMARY")
         print("\n✓ All tests passed!")
-        print(f"\n📊 API is fully functional!")
-        print(f"\n🌐 Interactive docs available at:")
+        print(f"\nAPI is fully functional!")
+        print(f"\nInteractive docs available at:")
         print(f"   Swagger UI: {BASE_URL}/docs")
         print(f"   ReDoc: {BASE_URL}/redoc")
         
         if wait_for_completion and result['status'] == 'completed':
-            print(f"\n📝 View your analysis:")
+            print(f"\nView your analysis:")
             print(f"   GET {BASE_URL}/api/queries/{query_id}")
         
         print()
         
     except AssertionError as e:
-        print(f"\n❌ Test failed: {e}")
+        print(f"\nTest failed: {e}")
     except requests.exceptions.ConnectionError:
-        print(f"\n❌ Could not connect to API at {BASE_URL}")
+        print(f"\nCould not connect to API at {BASE_URL}")
         print("   Make sure the server is running:")
         print("   python -m app.main")
     except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
+        print(f"\nUnexpected error: {e}")
         import traceback
         traceback.print_exc()
 

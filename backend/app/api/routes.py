@@ -19,17 +19,13 @@ logger = logging.getLogger(__name__)
 # Create router FIRST before using it
 router = APIRouter(prefix="/api", tags=["competitive-intelligence"])
 
-# -----------------------------
 # Helper function for background task DB access
-# -----------------------------
 def get_db_for_background() -> MongoDBService:
     """Get MongoDB client safely for background tasks."""
     return get_db()
 
 
-# -----------------------------
 # Routes
-# -----------------------------
 @router.post("/queries", response_model=QueryResponse)
 async def create_query(
     request: QueryRequest,

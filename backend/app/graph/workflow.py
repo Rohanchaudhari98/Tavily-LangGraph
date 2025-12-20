@@ -44,7 +44,7 @@ def create_competitive_intelligence_workflow(
         Compiled workflow ready to run
     """
     
-    logger.info("🏗️  Building competitive intelligence workflow...")
+    logger.info("Building competitive intelligence workflow...")
     
     # Set up all the agents
     discovery_agent = CompetitorDiscoveryAgent(
@@ -102,7 +102,7 @@ def create_competitive_intelligence_workflow(
     )
     
     # Define the flow between agents
-    workflow.add_edge("discovery", "research")  # Discovery → Research
+    workflow.add_edge("discovery", "research")
     workflow.add_edge("research", "extraction")
     workflow.add_edge("extraction", "crawl")
     workflow.add_edge("crawl", "analyze")

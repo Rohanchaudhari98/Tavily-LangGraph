@@ -49,14 +49,14 @@ class ExtractionAgent:
         research_results = state.get("research_results", [])
         
         if not research_results:
-            logger.warning("⚠️  No research results to extract from")
+            logger.warning("No research results to extract from")
             return {
                 **state,
                 "extracted_data": [],
                 "errors": state.get("errors", []) + ["No research results available"]
             }
         
-        logger.info(f"🔬 Extraction Agent starting...")
+        logger.info(f"Extraction Agent starting...")
         
         # Collect URLs to extract from
         urls_to_extract = self._collect_urls(research_results)
@@ -64,7 +64,7 @@ class ExtractionAgent:
         logger.info(f"Found {len(urls_to_extract)} URLs to extract")
         
         if not urls_to_extract:
-            logger.warning("⚠️  No valid URLs found in research results")
+            logger.warning("No valid URLs found in research results")
             return {
                 **state,
                 "extracted_data": [],
@@ -79,14 +79,14 @@ class ExtractionAgent:
             for item in urls_to_extract
         ]
         
-        logger.info(f"🚀 Extracting from {len(tasks)} URLs in parallel...")
+        logger.info(f"Extracting from {len(tasks)} URLs in parallel...")
         extracted_data = await asyncio.gather(*tasks, return_exceptions=True)
         
         # Handle any exceptions
         processed_data = []
         for i, result in enumerate(extracted_data):
             if isinstance(result, Exception):
-                logger.error(f"❌ Extraction failed for {urls_to_extract[i]['url']}: {str(result)}")
+                logger.error(f"Extraction failed for {urls_to_extract[i]['url']}: {str(result)}")
                 processed_data.append({
                     "competitor": urls_to_extract[i]["competitor"],
                     "url": urls_to_extract[i]["url"],
@@ -99,7 +99,7 @@ class ExtractionAgent:
         
         # Count successes
         success_count = sum(1 for d in processed_data if d.get("status") == "success")
-        logger.info(f"✅ Extraction complete. {success_count}/{len(processed_data)} successful")
+        logger.info(f"Extraction complete. {success_count}/{len(processed_data)} successful")
         
         # Update state
         return {
@@ -138,7 +138,7 @@ class ExtractionAgent:
                 result = response["results"][0]
                 raw_content = result.get("raw_content", "")
                 
-                logger.info(f"✅ Extracted {len(raw_content)} characters from {competitor}")
+                logger.info(f"Extracted {len(raw_content)} characters from {competitor}")
                 
                 return {
                     "competitor": competitor,
@@ -150,7 +150,7 @@ class ExtractionAgent:
                     "status": "success"
                 }
             else:
-                logger.warning(f"⚠️  No content extracted from {url}")
+                logger.warning(f"No content extracted from {url}")
                 return {
                     "competitor": competitor,
                     "url": url,
@@ -160,7 +160,7 @@ class ExtractionAgent:
                 }
                 
         except Exception as e:
-            logger.error(f"❌ Extraction error for {url}: {str(e)}")
+            logger.error(f"Extraction error for {url}: {str(e)}")
             return {
                 "competitor": competitor,
                 "url": url,
