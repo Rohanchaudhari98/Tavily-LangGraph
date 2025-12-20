@@ -1,11 +1,5 @@
 """
-Test LangGraph Workflow End-to-End.
-
-This tests the complete workflow orchestration:
-1. Creates workflow
-2. Prepares initial state
-3. Executes workflow
-4. Validates results
+Test LangGraph Workflow End-to-End
 """
 
 import pytest
@@ -20,10 +14,7 @@ from app.config import settings
 
 @pytest.mark.asyncio
 async def test_langgraph_workflow():
-    """
-    Test the complete LangGraph workflow with 3 competitors.
-    """
-    
+    # Test the complete LangGraph workflow with 3 competitors
     print("\n" + "="*70)
     print("LANGGRAPH WORKFLOW TEST")
     print("="*70)
@@ -65,7 +56,7 @@ async def test_langgraph_workflow():
     
     start_time = time.time()
     
-    # Run the workflow (LangGraph orchestrates everything!)
+    # Running workflow
     final_state = await workflow.ainvoke(initial_state)
     
     execution_time = time.time() - start_time
@@ -150,10 +141,7 @@ async def test_langgraph_workflow():
 
 @pytest.mark.asyncio
 async def test_workflow_state_flow():
-    """
-    Test that state flows correctly between agents.
-    """
-    
+    # Test that state flows correctly between agents
     print("\n" + "="*70)
     print(" STATE FLOW TEST")
     print("="*70)
@@ -209,7 +197,7 @@ async def test_workflow_state_flow():
 
 
 async def main():
-    """Run all LangGraph tests"""
+    # Run all LangGraph tests
     
     print("\n" + "RUNNING LANGGRAPH TESTS")
     

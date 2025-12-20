@@ -1,5 +1,5 @@
 """
-Pydantic models for API requests and responses.
+Pydantic models for API requests and responses
 """
 
 from pydantic import BaseModel, Field
@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 class QueryRequest(BaseModel):
-    """Request model for creating a competitive intelligence query"""
+    # Request model for submitting a new competitive intelligence query
     
     query: str = Field(
         ...,
@@ -45,12 +45,11 @@ class QueryRequest(BaseModel):
     
     max_competitors: int = Field(
         default=5,
-        description="Maximum number of competitors to discover (only used if use_auto_discovery=True)",
+        description="Max competitors to discover (only if use_auto_discovery=True)",
         ge=3,
         le=10
     )
     
-    # Freshness filter
     freshness: Literal["anytime", "1month", "3months", "6months", "1year"] = Field(
         default="anytime",
         description="Filter search results by time range"
@@ -58,8 +57,7 @@ class QueryRequest(BaseModel):
 
 
 class QueryResponse(BaseModel):
-    """Response after submitting a query"""
-    
+    # Response after submitting a query
     query_id: str = Field(
         ...,
         description="Unique ID for this query"
@@ -83,8 +81,7 @@ class QueryResponse(BaseModel):
 
 
 class QueryResult(BaseModel):
-    """Full results for a completed query"""
-    
+    # Full results for a completed query
     query_id: str
     status: str  # "processing", "completed", "failed"
     
@@ -96,7 +93,7 @@ class QueryResult(BaseModel):
     
     # Results
     analysis: Optional[str] = None
-    chart_data: Optional[dict] = None  # Structured data for charts
+    chart_data: Optional[dict] = None
     research_results: Optional[List[dict]] = None
     extracted_data: Optional[List[dict]] = None
     crawl_results: Optional[List[dict]] = None
@@ -116,8 +113,7 @@ class QueryResult(BaseModel):
 
 
 class QueryListItem(BaseModel):
-    """Summary item for listing queries"""
-    
+    # Summary item for listing queries
     query_id: str
     query: str
     company_name: str

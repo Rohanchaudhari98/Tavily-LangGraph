@@ -11,26 +11,20 @@ from pathlib import Path
 from datetime import datetime
 import json
 
+
 def setup_logging(log_level: str = "INFO", log_dir: str = "logs"):
-    """
-    Configure application-wide logging.
-    
-    Args:
-        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        log_dir: Directory to store log files
-    """
-    # Create logs directory if it doesn't exist
+    # Create logs directory
     log_path = Path(log_dir)
     log_path.mkdir(exist_ok=True)
     
-    # Root logger
+    # Set up root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, log_level.upper()))
     
-    # Clear existing handlers
+    # Clear any existing handlers
     root_logger.handlers.clear()
     
-    # Console handler with formatting
+    # Console handler - pretty format for development
     console_handler = logging.StreamHandler()
     console_handler.setLevel(getattr(logging, log_level.upper()))
     console_format = logging.Formatter(
@@ -40,7 +34,7 @@ def setup_logging(log_level: str = "INFO", log_dir: str = "logs"):
     console_handler.setFormatter(console_format)
     root_logger.addHandler(console_handler)
     
-    # File handler with rotation
+    # File handler - detailed logs with rotation
     file_handler = logging.handlers.RotatingFileHandler(
         filename=log_path / 'app.log',
         maxBytes=10 * 1024 * 1024,  # 10MB
@@ -55,7 +49,7 @@ def setup_logging(log_level: str = "INFO", log_dir: str = "logs"):
     file_handler.setFormatter(file_format)
     root_logger.addHandler(file_handler)
     
-    # Error file handler (errors and above)
+    # Separate error log for quick troubleshooting
     error_file_handler = logging.handlers.RotatingFileHandler(
         filename=log_path / 'errors.log',
         maxBytes=10 * 1024 * 1024,  # 10MB
@@ -66,7 +60,7 @@ def setup_logging(log_level: str = "INFO", log_dir: str = "logs"):
     error_file_handler.setFormatter(file_format)
     root_logger.addHandler(error_file_handler)
     
-    # Suppress noisy loggers
+    # Quiet down noisy third-party loggers
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     
@@ -74,14 +68,7 @@ def setup_logging(log_level: str = "INFO", log_dir: str = "logs"):
 
 
 def log_request_response(request_data: dict, response_data: dict = None, duration_ms: float = None):
-    """
-    Log request and response data in structured format.
-    
-    Args:
-        request_data: Request information (method, path, query_id, etc.)
-        response_data: Response information (status_code, etc.)
-        duration_ms: Request duration in milliseconds
-    """
+    # Log request and response in structured JSON format
     logger = logging.getLogger("request_response")
     
     log_entry = {
@@ -99,24 +86,17 @@ def log_request_response(request_data: dict, response_data: dict = None, duratio
 
 
 def log_error(error: Exception, context: dict = None):
-    """
-    Log error with context information.
-    
-    Args:
-        error: Exception object
-        context: Additional context (query_id, user_id, etc.)
-    """
+    # Log error with additional context
     logger = logging.getLogger("errors")
     
     error_entry = {
         "timestamp": datetime.now().isoformat(),
         "error_type": type(error).__name__,
         "error_message": str(error),
-        "error_traceback": None,  # Can add traceback if needed
+        "error_traceback": None,  # Can add if needed for debugging
     }
     
     if context:
         error_entry["context"] = context
     
     logger.error(json.dumps(error_entry))
-

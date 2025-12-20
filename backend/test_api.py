@@ -1,15 +1,8 @@
 """
 Test the FastAPI backend endpoints.
 
-This script tests:
-1. Health check
-2. Creating a query
-3. Getting query status
-4. Listing queries
-5. Deleting a query
-
-Note: These tests require the FastAPI server to be running.
-Start the server with: python -m app.main
+Tests health check, query creation, status retrieval, listing, and deletion.
+Requires the FastAPI server to be running: python -m app.main
 """
 
 import pytest
@@ -17,29 +10,30 @@ import requests
 import time
 import json
 
-# API base URL
 BASE_URL = "http://localhost:8000"
 
 
 @pytest.fixture(scope="module")
 def server_available():
-    """Check if the server is available, skip tests if not"""
+    # Check if server is running, skip tests if not
     try:
         response = requests.get(f"{BASE_URL}/health", timeout=2)
         if response.status_code == 200:
             return True
     except requests.exceptions.RequestException:
         pass
-    pytest.skip("FastAPI server is not running. Start it with: python -m app.main")
+    pytest.skip("FastAPI server not running. Start with: python -m app.main")
+
 
 def print_section(title):
-    """Print a formatted section header"""
+    # Print a formatted section header
     print("\n" + "="*70)
     print(f"{title}")
     print("="*70)
 
+
 def test_health_check(server_available):
-    """Test health check endpoints"""
+    # Test health check endpoints
     print_section("TEST 1: Health Check")
     
     # Test root endpoint
@@ -57,9 +51,10 @@ def test_health_check(server_available):
     assert response.status_code == 200, "Health check failed!"
     print("\n✓ Health check passed!")
 
+
 @pytest.fixture
 def query_id(server_available):
-    """Create a query and return its ID for use in other tests"""
+    # Create a query and return its ID for other tests
     query_data = {
         "query": "AI search API pricing and features",
         "company_name": "Tavily",
@@ -84,7 +79,7 @@ def query_id(server_available):
 
 
 def test_create_query(server_available):
-    """Test creating a new query"""
+    # Test creating a new query
     print_section("TEST 2: Create Query")
     
     query_data = {
@@ -116,11 +111,12 @@ def test_create_query(server_available):
     assert "query_id" in result, "No query_id in response!"
     
     query_id = result["query_id"]
-    print(f"\nQuery created successfully!")
-    print(f"✓ Query ID: {query_id}")
+    print(f"\n✓ Query created successfully!")
+    print(f"Query ID: {query_id}")
+
 
 def test_get_query(server_available, query_id):
-    """Test getting query status and results"""
+    # Test getting query status and results
     print_section("TEST 3: Get Query Status")
     
     print(f"\nFetching query: {query_id}")
@@ -147,8 +143,9 @@ def test_get_query(server_available, query_id):
     assert response.status_code == 200, "Failed to get query!"
     print(f"\n✓ Query retrieved successfully!")
 
+
 def test_list_queries(server_available):
-    """Test listing all queries"""
+    # Test listing all queries
     print_section("TEST 4: List Queries")
     
     print("\nFetching all queries...")
@@ -168,10 +165,11 @@ def test_list_queries(server_available):
         print(f"      Created: {q['created_at']}")
     
     assert response.status_code == 200, "Failed to list queries!"
-    print(f"\nQueries listed successfully!")
+    print(f"\n✓ Queries listed successfully!")
+
 
 def test_delete_query(server_available, query_id):
-    """Test deleting a query"""
+    # Test deleting a query
     print_section("TEST 5: Delete Query")
     
     print(f"\nDeleting query: {query_id}")
@@ -182,19 +180,20 @@ def test_delete_query(server_available, query_id):
     print(f"Response: {response.json()}")
     
     assert response.status_code == 200, "Failed to delete query!"
-    print(f"\nQuery deleted successfully!")
+    print(f"\n✓ Query deleted successfully!")
     
     # Verify deletion
     print("\nVerifying deletion...")
     response = requests.get(f"{BASE_URL}/api/queries/{query_id}")
     
     if response.status_code == 404:
-        print("Query no longer exists (confirmed)")
+        print("✓ Query no longer exists (confirmed)")
     else:
         print("Query still exists (unexpected)")
 
+
 def test_api_documentation(server_available):
-    """Test API documentation endpoints"""
+    # Test API documentation endpoints
     print_section("TEST 6: API Documentation")
     
     print("\n1. Testing OpenAPI docs (GET /docs)...")
@@ -213,28 +212,22 @@ def test_api_documentation(server_available):
     
     print("\n✓ API documentation accessible!")
 
+
 def run_all_tests(wait_for_completion=False):
-    """Run all tests in sequence"""
+    # Run all tests in sequence
     
-    print("\n" + "FASTAPI BACKEND TEST SUITE")
+    print("\nFASTAPI BACKEND TEST SUITE")
     print("="*70)
     print(f"\nTesting API at: {BASE_URL}")
     print(f"Wait for completion: {wait_for_completion}")
     
     try:
-        # Test 1: Health check
+        # Run tests
         test_health_check()
-        
-        # Test 2: Create query
         query_id = test_create_query()
-        
-        # Test 3: Get query (optionally wait for completion)
         result = test_get_query(query_id, wait_for_completion=wait_for_completion)
-        
-        # Test 4: List queries
         test_list_queries()
         
-        # Test 5: Delete query (only if not waiting for completion)
         if not wait_for_completion:
             test_delete_query(query_id)
         else:
@@ -243,17 +236,16 @@ def run_all_tests(wait_for_completion=False):
             print(f"Status: {result['status']}")
             if result['status'] == 'completed':
                 print(f"Workflow completed successfully!")
-                print(f"\nYou can view the full results at:")
+                print(f"\nView results at:")
                 print(f"   {BASE_URL}/api/queries/{query_id}")
         
-        # Test 6: Documentation
         test_api_documentation()
         
         # Summary
         print_section("TEST SUMMARY")
         print("\n✓ All tests passed!")
         print(f"\nAPI is fully functional!")
-        print(f"\nInteractive docs available at:")
+        print(f"\nInteractive docs:")
         print(f"   Swagger UI: {BASE_URL}/docs")
         print(f"   ReDoc: {BASE_URL}/redoc")
         
@@ -267,7 +259,7 @@ def run_all_tests(wait_for_completion=False):
         print(f"\nTest failed: {e}")
     except requests.exceptions.ConnectionError:
         print(f"\nCould not connect to API at {BASE_URL}")
-        print("   Make sure the server is running:")
+        print("Make sure the server is running:")
         print("   python -m app.main")
     except Exception as e:
         print(f"\nUnexpected error: {e}")

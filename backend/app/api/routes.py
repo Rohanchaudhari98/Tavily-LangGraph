@@ -16,16 +16,14 @@ from app.utils.env import require_env
 
 logger = logging.getLogger(__name__)
 
-# Create router FIRST before using it
 router = APIRouter(prefix="/api", tags=["competitive-intelligence"])
 
-# Helper function for background task DB access
+
 def get_db_for_background() -> MongoDBService:
-    """Get MongoDB client safely for background tasks."""
+    # Get MongoDB client for background tasks
     return get_db()
 
 
-# Routes
 @router.post("/queries", response_model=QueryResponse)
 async def create_query(
     request: QueryRequest,
@@ -34,11 +32,10 @@ async def create_query(
 ):
     """
     Submit a new competitive intelligence query.
-    
-    The workflow runs in the background, so this returns immediately.
+    Workflow runs in background, so this returns immediately.
     """
     
-    # Validation: Must have either competitors OR auto-discovery enabled
+    # Validate input - need either competitors or auto-discovery
     if not request.use_auto_discovery and len(request.competitors) == 0:
         raise HTTPException(
             status_code=400,
@@ -46,16 +43,16 @@ async def create_query(
         )
     
     if request.use_auto_discovery:
-        logger.info(f"Auto-discovery query for {request.company_name} (max: {request.max_competitors})")
+        logger.info(f"Auto-discovery for {request.company_name} (max: {request.max_competitors})")
     else:
         logger.info(f"Manual query: {request.query} for {request.company_name}")
     
-    logger.info(f"Freshness filter: {request.freshness}")
+    logger.info(f"Freshness: {request.freshness}")
     
-    # Generate unique ID
+    # Create unique ID
     query_id = db.generate_id()
     
-    # Save query to MongoDB
+    # Save to database
     query_doc = {
         "_id": query_id,
         "query": request.query,
@@ -79,13 +76,13 @@ async def create_query(
     }
     
     await db.insert_query(query_doc)
-    logger.info(f"Query saved with ID: {query_id}")
+    logger.info(f"Query saved: {query_id}")
     
-    # Enforce env vars for background workflow
+    # Make sure we have the API keys we need
     require_env("TAVILY_API_KEY", settings.tavily_api_key)
     require_env("OPENAI_API_KEY", settings.openai_api_key)
     
-    # Start workflow in background
+    # Kick off background workflow
     background_tasks.add_task(
         run_workflow_background,
         query_id=query_id,
@@ -101,13 +98,13 @@ async def create_query(
         db=get_db_for_background()
     )
     
-    logger.info(f"Background task started for query {query_id}")
+    logger.info(f"Background task started: {query_id}")
     
-    # Different message based on mode
+    # Build response message
     if request.use_auto_discovery:
         message = f"Query submitted. AI will discover up to {request.max_competitors} competitors."
     else:
-        message = f"Query submitted successfully. Analyzing {len(request.competitors)} competitors."
+        message = f"Query submitted. Analyzing {len(request.competitors)} competitors."
     
     return QueryResponse(
         query_id=query_id,
@@ -122,9 +119,7 @@ async def get_query(
     query_id: str,
     db: MongoDBService = Depends(get_db)
 ):
-    """
-    Get the results for a specific query.
-    """
+    # Get results for a specific query
     
     logger.info(f"Fetching query: {query_id}")
     
@@ -134,7 +129,7 @@ async def get_query(
         logger.warning(f"Query not found: {query_id}")
         raise HTTPException(status_code=404, detail="Query not found")
     
-    # Calculate total agents based on whether discovery was used
+    # Figure out total agents based on whether discovery was used
     use_auto_discovery = query.get("use_auto_discovery", False)
     total_agents = 5 if use_auto_discovery else 4
     
@@ -168,9 +163,7 @@ async def list_queries(
     limit: int = 20,
     db: MongoDBService = Depends(get_db)
 ):
-    """
-    List all queries (most recent first).
-    """
+    # List all queries (most recent first)
     
     logger.info(f"Listing queries (skip={skip}, limit={limit})")
     
@@ -194,9 +187,7 @@ async def delete_query(
     query_id: str,
     db: MongoDBService = Depends(get_db)
 ):
-    """
-    Delete a query and its results.
-    """
+    # Delete a query and its results
     
     logger.info(f"Deleting query: {query_id}")
     

@@ -7,7 +7,7 @@ from app.config import settings
 
 
 def test_config_loads():
-    """Test that configuration loads correctly"""
+    # Test that configuration loads correctly
     print("\n" + "="*70)
     print("CONFIGURATION TEST")
     print("="*70)

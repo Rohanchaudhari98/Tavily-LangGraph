@@ -26,26 +26,26 @@ async def run_workflow_background(
     use_premium_analysis: bool,
     use_auto_discovery: bool,
     max_competitors: int,
-    freshness: str,  # NEW
+    freshness: str,
     tavily_api_key: str,
     openai_api_key: str,
     db: MongoDBService
 ):
-    """Run the workflow in the background"""
+    # Run the workflow in the background
     
     from app.graph.workflow import create_competitive_intelligence_workflow, create_initial_state
     
     logger.info(f"Starting workflow for query {query_id}")
     
     try:
-        # Create workflow
+        # Set up workflow with API keys
         workflow = create_competitive_intelligence_workflow(
             tavily_api_key=tavily_api_key,
             openai_api_key=openai_api_key,
             use_premium_analysis=use_premium_analysis
         )
         
-        # Create initial state with new parameters
+        # Build initial state
         initial_state = create_initial_state(
             query=query,
             company_name=company_name,
@@ -55,10 +55,10 @@ async def run_workflow_background(
             freshness=freshness
         )
         
-        # Run workflow
+        # Run it
         final_state = await workflow.ainvoke(initial_state)
         
-        # Update MongoDB with results
+        # Save results to database
         await db.update_query(query_id, {
             "status": "completed",
             "analysis": final_state.get("analysis"),

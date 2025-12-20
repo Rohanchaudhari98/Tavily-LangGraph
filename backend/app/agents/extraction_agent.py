@@ -1,10 +1,8 @@
 """
-Extraction Agent - Uses Tavily Extract API to get structured data from URLs.
+Extraction Agent
 
-This agent:
-1. Takes URLs from Research Agent results
-2. Extracts full content from those pages
-3. Returns clean, structured data
+Pulls full content from competitor URLs using Tavily Extract API
+Handles JavaScript-rendered pages and returns clean text
 """
 
 from tavily import TavilyClient
@@ -16,36 +14,13 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 class ExtractionAgent:
-    """
-    Extracts structured data from competitor URLs using Tavily Extract API.
-    
-    Tavily Extract is powerful because:
-    - Handles JavaScript-rendered content
-    - Bypasses paywalls (where legally possible)
-    - Returns clean text (no HTML parsing needed)
-    - Fast and reliable
-    """
-    
+    # Extracts clean content from URLs found during research
     def __init__(self, tavily_api_key: str):
-        """
-        Initialize with Tavily API key.
-        
-        Args:
-            tavily_api_key: Your Tavily API key
-        """
         self.client = TavilyClient(api_key=tavily_api_key)
         self.name = "extraction"
     
     async def execute(self, state: Dict) -> Dict:
-        """
-        Extract content from research URLs IN PARALLEL.
-        
-        Args:
-            state: Current workflow state with research_results
-            
-        Returns:
-            Updated state with extracted_data populated
-        """
+        # Extract content from all research URLs in parallel
         research_results = state.get("research_results", [])
         
         if not research_results:
@@ -56,15 +31,15 @@ class ExtractionAgent:
                 "errors": state.get("errors", []) + ["No research results available"]
             }
         
-        logger.info(f"Extraction Agent starting...")
+        logger.info("Starting extraction...")
         
-        # Collect URLs to extract from
+        # Pull out URLs we want to extract
         urls_to_extract = self._collect_urls(research_results)
         
         logger.info(f"Found {len(urls_to_extract)} URLs to extract")
         
         if not urls_to_extract:
-            logger.warning("No valid URLs found in research results")
+            logger.warning("No valid URLs in research results")
             return {
                 **state,
                 "extracted_data": [],
@@ -73,20 +48,20 @@ class ExtractionAgent:
                 "updated_at": datetime.now()
             }
         
-        # Extract from all URLs in parallel
+        # Extract everything in parallel
         tasks = [
             self._extract_url(item) 
             for item in urls_to_extract
         ]
         
-        logger.info(f"Extracting from {len(tasks)} URLs in parallel...")
+        logger.info(f"Extracting {len(tasks)} URLs in parallel...")
         extracted_data = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Handle any exceptions
+        # Check for failures
         processed_data = []
         for i, result in enumerate(extracted_data):
             if isinstance(result, Exception):
-                logger.error(f"Extraction failed for {urls_to_extract[i]['url']}: {str(result)}")
+                logger.error(f"Failed to extract {urls_to_extract[i]['url']}: {str(result)}")
                 processed_data.append({
                     "competitor": urls_to_extract[i]["competitor"],
                     "url": urls_to_extract[i]["url"],
@@ -97,11 +72,9 @@ class ExtractionAgent:
             else:
                 processed_data.append(result)
         
-        # Count successes
         success_count = sum(1 for d in processed_data if d.get("status") == "success")
-        logger.info(f"Extraction complete. {success_count}/{len(processed_data)} successful")
+        logger.info(f"Extraction done: {success_count}/{len(processed_data)} successful")
         
-        # Update state
         return {
             **state,
             "extracted_data": processed_data,
@@ -111,34 +84,26 @@ class ExtractionAgent:
         }
     
     async def _extract_url(self, item: Dict) -> Dict:
-        """
-        Extract content from a single URL (async method).
-        
-        Args:
-            item: Dictionary with url, competitor, title, score
-            
-        Returns:
-            Extracted data for this URL
-        """
+        # Extract content from a single URL
         url = item["url"]
         competitor = item["competitor"]
         
         logger.info(f"Extracting: {url[:60]}...")
         
         try:
-            # Tavily client is sync, so wrap in executor
+            # Tavily client is sync, wrap it to make it async
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
                 lambda: self.client.extract(urls=[url])
             )
             
-            # Parse response
+            # Check if we got content back
             if response and "results" in response and len(response["results"]) > 0:
                 result = response["results"][0]
                 raw_content = result.get("raw_content", "")
                 
-                logger.info(f"Extracted {len(raw_content)} characters from {competitor}")
+                logger.info(f"Got {len(raw_content)} characters from {competitor}")
                 
                 return {
                     "competitor": competitor,
@@ -150,7 +115,7 @@ class ExtractionAgent:
                     "status": "success"
                 }
             else:
-                logger.warning(f"No content extracted from {url}")
+                logger.warning(f"No content from {url}")
                 return {
                     "competitor": competitor,
                     "url": url,
@@ -175,19 +140,13 @@ class ExtractionAgent:
         max_per_competitor: int = 2
     ) -> List[Dict]:
         """
-        Collect top URLs from research results.
-        
-        Args:
-            research_results: Results from Research Agent
-            max_per_competitor: Maximum URLs to extract per competitor (default: 2)
-            
-        Returns:
-            List of URLs with metadata
+        Grab the top URLs from research results
+        Takes top 2 per competitor by default - usually enough for good coverage
         """
         urls_to_extract = []
         
         for result in research_results:
-            # Skip failed research results
+            # Skip if research failed for this competitor
             if result.get("status") != "success":
                 logger.debug(f"Skipping {result.get('competitor')} - research failed")
                 continue
@@ -195,7 +154,7 @@ class ExtractionAgent:
             competitor = result.get("competitor")
             results_list = result.get("results", [])
             
-            # Take top N results per competitor
+            # Grab top N (Here 2) URLs for this competitor
             for item in results_list[:max_per_competitor]:
                 url = item.get("url")
                 if url:

@@ -1,11 +1,7 @@
 """
-MongoDB Service - Handles all database operations.
+MongoDB service for all database operations.
 
-Uses async PyMongo driver to store and retrieve:
-- User queries
-- Agent outputs
-- Analysis results
-- Workflow metadata
+Handles storage and retrieval of queries, agent outputs, and analysis results.
 """
 
 from pymongo import AsyncMongoClient
@@ -20,39 +16,27 @@ logger = logging.getLogger(__name__)
 
 class MongoDBService:
     """
-    Async MongoDB service for storing competitive intelligence data.
+    Async MongoDB service for competitive intelligence data.
     
-    Collections:
-    - queries: Stores all user queries and their results
+    Main collection: queries (stores all user queries and results)
     """
     
     def __init__(self, connection_string: str, database_name: str = "competitive_intelligence"):
-        """
-        Initialize MongoDB connection.
-        
-        Args:
-            connection_string: MongoDB connection URI (from MongoDB Atlas)
-            database_name: Name of the database to use
-        """
+        # Initialize MongoDB connection
         self.connection_string = connection_string
         self.database_name = database_name
         
-        # Create async MongoDB client
+        # Set up async client
         self.client = AsyncMongoClient(connection_string)
         self.db = self.client[database_name]
         
         # Collections
         self.queries = self.db["queries"]
         
-        logger.info(f"MongoDB service initialized for database: {database_name}")
+        logger.info(f"MongoDB service initialized: {database_name}")
     
     async def ping(self) -> bool:
-        """
-        Check if MongoDB connection is alive.
-        
-        Returns:
-            True if connected, False otherwise
-        """
+        # Check if MongoDB connection is alive
         try:
             await self.client.admin.command('ping')
             return True
@@ -60,38 +44,17 @@ class MongoDBService:
             return False
     
     def generate_id(self) -> str:
-        """
-        Generate a unique ID for a query.
-        
-        Returns:
-            String representation of MongoDB ObjectId
-        """
+        # Generate a unique ID for a query
         return str(ObjectId())
     
     async def insert_query(self, query_doc: Dict) -> str:
-        """
-        Insert a new query document.
-        
-        Args:
-            query_doc: Dictionary with query data
-            
-        Returns:
-            The inserted document's ID
-        """
+        # Insert a new query document
         result = await self.queries.insert_one(query_doc)
-        logger.info(f"Inserted query with ID: {result.inserted_id}")
+        logger.info(f"Inserted query: {result.inserted_id}")
         return str(result.inserted_id)
     
     async def get_query(self, query_id: str) -> Optional[Dict]:
-        """
-        Get a query by ID.
-        
-        Args:
-            query_id: The query's unique ID
-            
-        Returns:
-            Query document or None if not found
-        """
+        # Get a query by ID
         query = await self.queries.find_one({"_id": query_id})
         
         if query:
@@ -102,16 +65,7 @@ class MongoDBService:
         return query
     
     async def update_query(self, query_id: str, update_data: Dict) -> bool:
-        """
-        Update a query with new data.
-        
-        Args:
-            query_id: The query's unique ID
-            update_data: Dictionary of fields to update
-            
-        Returns:
-            True if updated, False if not found
-        """
+        # Update a query with new data
         result = await self.queries.update_one(
             {"_id": query_id},
             {"$set": update_data}
@@ -130,17 +84,7 @@ class MongoDBService:
         limit: int = 20,
         status: Optional[str] = None
     ) -> List[Dict]:
-        """
-        List queries with pagination and optional filtering.
-        
-        Args:
-            skip: Number of documents to skip (for pagination)
-            limit: Maximum number of documents to return
-            status: Optional status filter ("processing", "completed", "failed")
-            
-        Returns:
-            List of query documents
-        """
+        # List queries with pagination and optional status filter
         # Build filter
         filter_dict = {}
         if status:
@@ -155,15 +99,7 @@ class MongoDBService:
         return queries
     
     async def delete_query(self, query_id: str) -> bool:
-        """
-        Delete a query and its results.
-        
-        Args:
-            query_id: The query's unique ID
-            
-        Returns:
-            True if deleted, False if not found
-        """
+        # Delete a query and its results
         result = await self.queries.delete_one({"_id": query_id})
         
         if result.deleted_count > 0:
@@ -174,15 +110,7 @@ class MongoDBService:
             return False
     
     async def count_queries(self, status: Optional[str] = None) -> int:
-        """
-        Count total number of queries.
-        
-        Args:
-            status: Optional status filter
-            
-        Returns:
-            Number of queries
-        """
+        # Count total queries, optionally filtered by status
         filter_dict = {}
         if status:
             filter_dict["status"] = status
@@ -191,15 +119,7 @@ class MongoDBService:
         return count
     
     async def get_recent_queries(self, limit: int = 5) -> List[Dict]:
-        """
-        Get the most recent queries.
-        
-        Args:
-            limit: Number of queries to return
-            
-        Returns:
-            List of recent query documents
-        """
+        # Get the most recent queries
         cursor = self.queries.find().sort("created_at", -1).limit(limit)
         queries = await cursor.to_list(length=limit)
         
@@ -209,9 +129,8 @@ class MongoDBService:
     
     async def create_indexes(self):
         """
-        Create database indexes for better query performance.
-        
-        Call this once when setting up the database.
+        Create database indexes for better performance.
+        Run this once when setting up the database.
         """
         # Index on created_at for sorting
         await self.queries.create_index([("created_at", -1)])
@@ -225,11 +144,7 @@ class MongoDBService:
         logger.info("Database indexes created")
     
     async def close(self):
-        """
-        Close the MongoDB connection.
-        
-        Call this when shutting down the application.
-        """
+        # Close MongoDB connection. Call when shutting down
         await self.client.close()
         logger.info("MongoDB connection closed")
     

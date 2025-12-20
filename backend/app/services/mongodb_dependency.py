@@ -1,14 +1,21 @@
+"""
+MongoDB dependency for FastAPI.
+
+Provides a singleton MongoDB service instance.
+"""
+
 from app.services.mongodb_service import MongoDBService
 from app.config import settings
 from app.utils.env import require_env
 
 _db: MongoDBService | None = None
 
+
 def get_db() -> MongoDBService:
-    """Lazy MongoDBService getter for FastAPI dependencies."""
+    # Get MongoDB service instance for dependency injection
     global _db
 
-    # Validate env var at runtime
+    # Make sure we have the connection string
     require_env("MONGODB_URI", settings.mongodb_uri)
 
     if _db is None:

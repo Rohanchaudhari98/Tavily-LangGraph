@@ -20,8 +20,7 @@ logger = logging.getLogger(__name__)
 async def error_handler_middleware(request: Request, call_next):
     """
     Global error handling middleware.
-    
-    Catches all exceptions and returns appropriate error responses.
+    Catches all exceptions and returns appropriate responses.
     """
     start_time = time.time()
     
@@ -29,7 +28,7 @@ async def error_handler_middleware(request: Request, call_next):
         response = await call_next(request)
         process_time = (time.time() - start_time) * 1000
         
-        # Log slow requests
+        # Flag slow requests for monitoring
         if process_time > 5000:
             logger.warning(
                 f"Slow request: {request.method} {request.url.path} "
@@ -79,4 +78,3 @@ async def error_handler_middleware(request: Request, call_next):
                 "error_id": id(e)
             }
         )
-

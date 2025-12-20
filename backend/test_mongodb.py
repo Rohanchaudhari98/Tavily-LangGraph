@@ -11,8 +11,7 @@ from datetime import datetime
 
 @pytest.mark.asyncio
 async def test_mongodb():
-    """Test basic MongoDB operations"""
-    
+    # Test basic MongoDB operations
     print("\nTesting MongoDB Service...")
     print("="*70)
     
@@ -82,7 +81,7 @@ async def test_mongodb():
         print(f"   Error inserting query: {e}")
         return
     
-    # Test 4: Retrieve the query
+    # Test 4: Retrieve query
     print("\n4. Retrieving query...")
     try:
         retrieved = await db.get_query(query_id)
@@ -90,7 +89,7 @@ async def test_mongodb():
     except Exception as e:
         print(f"   Error retrieving query: {e}")
     
-    # Test 5: Update the query
+    # Test 5: Update query
     print("\n5. Updating query status...")
     try:
         await db.update_query(
