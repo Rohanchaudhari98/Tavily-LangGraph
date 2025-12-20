@@ -207,7 +207,7 @@ Frontend will run on `http://localhost:5173`
 1. Go to [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
 2. Create free cluster
 3. Create database user
-4. Whitelist your IP (or use 0.0.0.0/0 for development)
+4. Whitelist your IP
 5. Get connection string
 
 #### OpenAI API Key
@@ -572,25 +572,6 @@ npm test -- src/pages/HomePage.test.jsx
 Test Files  3 passed (3)
      Tests  14 passed (14)
 ```
-
-### Manual Testing Checklist
-
-- [ ] Submit query with 2-3 competitors (manual mode)
-- [ ] Test auto-discovery feature with company name only
-- [ ] Verify freshness filter works (test different time ranges)
-- [ ] Verify real-time progress updates (including discovery agent)
-- [ ] Check all three tabs display correctly
-- [ ] Verify charts are displayed in Analysis > Charts tab
-- [ ] Check pricing bar chart shows correct data
-- [ ] Verify feature radar chart displays all competitors
-- [ ] Check risk matrix shows risk assessment cards
-- [ ] Export to PDF - verify complete content (including charts)
-- [ ] Export to Word - verify complete content
-- [ ] View query in history page
-- [ ] Delete query from history
-- [ ] Test with premium analysis mode
-- [ ] Test error handling (invalid competitor name)
-- [ ] Verify discovered competitors are relevant
 
 ## 📁 Project Structure
 ```
