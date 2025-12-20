@@ -534,55 +534,100 @@ Test Files  3 passed (3)
 
 ## 📁 Project Structure
 ```
-competitive-intelligence-platform/
+Tavily-LangGraph
 ├── backend/
 │   ├── app/
+│   │   ├── __init__.py
 │   │   ├── agents/
+│   │   │   ├── __init__.py
 │   │   │   ├── discovery_agent.py     # Auto-competitor discovery (GPT-4o-mini + Tavily)
 │   │   │   ├── research_agent.py      # Tavily AI search (with freshness filter)
 │   │   │   ├── extraction_agent.py    # Website data extraction
 │   │   │   ├── crawl_agent.py         # Deep web crawling
 │   │   │   └── analysis_agent.py      # GPT-4o-mini/GPT-4o synthesis + chart data extraction
-│   │   ├── workflow/
-│   │   │   └── competitive_intel_workflow.py  # LangGraph orchestration
-│   │   ├── database/
-│   │   │   └── mongodb.py             # MongoDB operations
-│   │   ├── routes/
-│   │   │   └── queries.py             # API endpoints
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── models.py
+│   │   │   └── routes.py              # API endpoints
+│   │   ├── clients/
+│   │   │   ├── openai_client.py
+│   │   │   └── tavily_client.py
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   └── background.py
+│   │   ├── graph/
+│   │   │   ├── __init__.py
+│   │   │   ├── state.py
+│   │   │   └── workflow.py            # LangGraph orchestration
+│   │   ├── middleware/
+│   │   │   ├──  __init__.py
+│   │   │   ├── error_handler.py
+│   │   │   └── request_logger.py
+│   │   ├── services/                  # mongodb operations
+│   │   │   ├── __init__.py          
+│   │   │   ├── mongodb_dependency.py
+│   │   │   └── mongodb_service.py 
+│   │   ├── utils/
+│   │   │   ├── __init__.py   
+│   │   │   ├── env.py
+│   │   │   └── logging_config.py
+│   │   ├── config.py
 │   │   └── main.py                    # FastAPI app
 │   ├── requirements.txt
-│   └── .env
+│   ├── Procfile
+│   ├── .gitignore
+│   ├── .ebignore
+│   ├── test_api.py
+│   ├── test_config.py
+│   ├── test_workflow.py
+│   ├── test_pipeline.py
+│   ├── test_mongodb.py
+│   └── .env.example
 │
 ├── frontend/
+│   ├── public/
+│   │   ├── vite.svg
 │   ├── src/
+│   │   ├── assets/
+│   │   │   ├── react.svg
 │   │   ├── pages/
 │   │   │   ├── HomePage.jsx           # Main landing page
 │   │   │   ├── HistoryPage.jsx        # Query history
 │   │   │   └── ResultsPage.jsx        # Results display
 │   │   ├── components/
 │   │   │   ├── QueryForm.jsx          # Query submission form
+│   │   │   ├── QueryForm.test.jsx
 │   │   │   ├── ResultsDisplay.jsx     # Three-tab results with charts
 │   │   │   ├── ExportButtons.jsx      # PDF/Word export
 │   │   │   ├── CompetitorInput.jsx    # Competitor management
+│   │   │   ├── AgentProgress.jsx      # To track real-time agent progress
+│   │   │   ├── ErrorBoundary.jsx      # Error Handling
+│   │   │   ├── LoadingSpinner.jsx     # Spinner
+│   │   │   ├── LoadingSpinner.test.jsx
 │   │   │   └── charts/
 │   │   │       ├── ChartsView.jsx     # Main charts container
 │   │   │       ├── PricingChart.jsx   # Bar chart for pricing comparison
 │   │   │       ├── FeatureRadar.jsx   # Radar chart for features
 │   │   │       └── RiskMatrix.jsx     # Risk assessment visualization
+│   │   ├── pages/
+│   │   │   ├── HistoryPage.jsx
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── HomePage.test.jsx
+│   │   │   └── ResultsPage.jsx
 │   │   ├── services/
 │   │   │   ├── api.js                 # API client
 │   │   │   └── exportService.js       # Export functionality
 │   │   ├── App.jsx
+│   │   ├── App.css
 │   │   ├── main.jsx
 │   │   └── index.css                  # Tailwind styles
 │   ├── package.json
-│   └── .env
-│
-├── docs/
-│   ├── architecture.md
-│   ├── api-documentation.md
-│   └── deployment-guide.md
-│
+│   ├── index.html
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   ├── .gitignore
+│   └── .env.production
 └── README.md
 ```
 
