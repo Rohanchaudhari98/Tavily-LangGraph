@@ -707,8 +707,9 @@ Tavily-LangGraph
 **Total: ~$0.606 per query**
 
 **Monthly Estimate (100 queries, 50% auto-discovery):**
-- Standard mode: ~$2.00/month
-- Premium mode: ~$61.00/month
+- Standard mode: ~$1.20/month (50 manual @ $0.01 + 50 auto @ $0.014)
+- Premium mode: ~$60.30/month (50 manual @ $0.60 + 50 auto @ $0.606)
+
 
 ## 🚀 Deployment
 
