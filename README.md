@@ -6,6 +6,8 @@ URL: https://d13qhhlvt9ye93.cloudfront.net
 
 Swagger: https://api.tavilyapp.com/docs
 
+Postman Collection: https://rohan-chaudhari98-1649539.postman.co/workspace/Rohan-Chaudhari's-team's-Worksp~9b947a67-a94c-48e9-85d9-7a45f4287577/collection/50831799-b6649f63-c444-442a-9ef1-7b69ba52b7bf?action=share&creator=50831799
+
 <img width="3962" height="6400" alt="frontend10-1" src="https://github.com/user-attachments/assets/15954db3-a663-4857-9330-c9465cda903b" />
 
 
