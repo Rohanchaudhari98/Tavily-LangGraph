@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import ExportButtons from './ExportButtons';
 import ChartsView from './charts/ChartsView';
+import AgentProgress from './AgentProgress';
 
 export default function ResultsDisplay({ queryData }) {
   const [activeTab, setActiveTab] = useState('analysis');
@@ -115,6 +116,95 @@ export default function ResultsDisplay({ queryData }) {
           )}
         </div>
       </div>
+
+      {/* Agent Progress & Flow Visualization */}
+      {(queryData.status === 'processing' || queryData.status === 'completed') && (
+        <div className="card p-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <span>🤝</span>
+            Agent Collaboration Flow
+          </h3>
+          
+          {/* Agent Progress Component */}
+          <AgentProgress completed={queryData.completed_agents || []} />
+          
+          {/* Visual Flow Diagram */}
+          <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <span>📊</span>
+              Complete Query-to-Result Flow
+            </h4>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="px-3 py-1.5 bg-white rounded-lg border border-gray-300 font-medium text-gray-700">
+                1. Query Submitted
+              </span>
+              <span className="text-gray-400">→</span>
+              {queryData.use_auto_discovery && (
+                <>
+                  <span className={`px-3 py-1.5 rounded-lg border font-medium ${
+                    queryData.completed_agents?.includes('competitor_discovery') || queryData.completed_agents?.includes('discovery')
+                      ? 'bg-green-100 border-green-300 text-green-700'
+                      : 'bg-gray-100 border-gray-300 text-gray-500'
+                  }`}>
+                    2. Discovery Agent
+                  </span>
+                  <span className="text-gray-400">→</span>
+                </>
+              )}
+              <span className={`px-3 py-1.5 rounded-lg border font-medium ${
+                queryData.completed_agents?.includes('research')
+                  ? 'bg-green-100 border-green-300 text-green-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-500'
+              }`}>
+                {queryData.use_auto_discovery ? '3. Research Agent' : '2. Research Agent'}
+              </span>
+              <span className="text-gray-400">→</span>
+              <span className={`px-3 py-1.5 rounded-lg border font-medium ${
+                queryData.completed_agents?.includes('extraction')
+                  ? 'bg-green-100 border-green-300 text-green-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-500'
+              }`}>
+                {queryData.use_auto_discovery ? '4. Extraction Agent' : '3. Extraction Agent'}
+              </span>
+              <span className="text-gray-400">→</span>
+              <span className={`px-3 py-1.5 rounded-lg border font-medium ${
+                queryData.completed_agents?.includes('crawl')
+                  ? 'bg-green-100 border-green-300 text-green-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-500'
+              }`}>
+                {queryData.use_auto_discovery ? '5. Crawl Agent' : '4. Crawl Agent'}
+              </span>
+              <span className="text-gray-400">→</span>
+              <span className={`px-3 py-1.5 rounded-lg border font-medium ${
+                queryData.completed_agents?.includes('analysis')
+                  ? 'bg-green-100 border-green-300 text-green-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-500'
+              }`}>
+                {queryData.use_auto_discovery ? '6. Analysis Agent' : '5. Analysis Agent'}
+              </span>
+              <span className="text-gray-400">→</span>
+              <span className={`px-3 py-1.5 rounded-lg border font-medium ${
+                queryData.status === 'completed'
+                  ? 'bg-green-100 border-green-300 text-green-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-500'
+              }`}>
+                Final Report
+              </span>
+            </div>
+            
+            {/* Agent Collaboration Explanation */}
+            {queryData.status === 'processing' && (
+              <div className="mt-4 p-4 bg-white/60 rounded-lg border border-blue-200">
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  <strong className="text-gray-700">How Agents Collaborate:</strong> Each agent builds on the previous agent's work. 
+                  The Discovery Agent finds competitors, Research Agent searches the web, Extraction Agent pulls structured data, 
+                  Crawl Agent does deep analysis, and Analysis Agent synthesizes everything into the final report.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Analysis Tabs Card */}
       <div className="card p-8">

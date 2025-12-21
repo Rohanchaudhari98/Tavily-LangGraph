@@ -1,7 +1,7 @@
 // Page to display results of a specific query
 // Handles loading, error states, and polling for updates if the query is processing
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuery } from '../services/api';
 import ResultsDisplay from '../components/ResultsDisplay';
@@ -14,27 +14,30 @@ export default function ResultsPage() {
   const [queryData, setQueryData] = useState(null); // Stores query result
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState(null); // Error state
+  const statusRef = useRef(null); // Track current status to avoid stale closure
 
   // Fetch query data on mount and set up polling for processing queries
   useEffect(() => {
     fetchQueryData();
 
-    // Poll every 3 seconds if query is still processing
+    // Poll every 3 seconds while query is processing
     const interval = setInterval(() => {
-      if (queryData?.status === 'processing') {
+      // Check current status from ref (always up-to-date)
+      if (!statusRef.current || statusRef.current === 'processing') {
         fetchQueryData();
       }
     }, 3000);
 
     // Clear interval on unmount
     return () => clearInterval(interval);
-  }, [queryId, queryData?.status]);
+  }, [queryId]);
 
   // Function to fetch query details from API
   const fetchQueryData = async () => {
     try {
       const data = await getQuery(queryId);
       setQueryData(data);
+      statusRef.current = data?.status; // Update ref with latest status
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch query:', err);

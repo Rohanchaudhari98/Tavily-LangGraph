@@ -55,24 +55,56 @@ async def run_workflow_background(
             freshness=freshness
         )
         
-        # Run it
-        final_state = await workflow.ainvoke(initial_state)
+        # Use streaming to get real-time updates after each agent
+        final_state = None
+        async for state in workflow.astream(initial_state):
+            # state is a dict with node names as keys
+            # Get the latest state from the last node that executed
+            for node_name, node_state in state.items():
+                final_state = node_state
+                
+                # Update MongoDB after each agent completes
+                completed_agents = node_state.get("completed_agents", [])
+                if completed_agents:
+                    # Update MongoDB with current progress
+                    update_data = {
+                        "status": "processing",
+                        "competitors": node_state.get("competitors", []),
+                        "company_info": node_state.get("company_info"),
+                        "research_results": node_state.get("research_results", []),
+                        "extracted_data": node_state.get("extracted_data", []),
+                        "crawl_results": node_state.get("crawl_results", []),
+                        "completed_agents": completed_agents,
+                        "current_step": node_state.get("current_step", "processing"),
+                        "errors": node_state.get("errors", []),
+                        "updated_at": datetime.now()
+                    }
+                    
+                    # Only update analysis and chart_data if they exist (final agent)
+                    if node_state.get("analysis"):
+                        update_data["analysis"] = node_state.get("analysis")
+                        update_data["chart_data"] = node_state.get("chart_data")
+                    
+                    await db.update_query(query_id, update_data)
+                    
+                    logger.info(f"Updated query {query_id}: {len(completed_agents)} agents completed")
         
-        # Save results to database
-        await db.update_query(query_id, {
-            "status": "completed",
-            "analysis": final_state.get("analysis"),
-            "chart_data": final_state.get("chart_data"),
-            "competitors": final_state.get("competitors"),
-            "company_info": final_state.get("company_info"),
-            "research_results": final_state.get("research_results"),
-            "extracted_data": final_state.get("extracted_data"),
-            "crawl_results": final_state.get("crawl_results"),
-            "completed_agents": final_state.get("completed_agents"),
-            "errors": final_state.get("errors"),
-            "completed_at": datetime.now(),
-            "updated_at": datetime.now()
-        })
+        # Final update with completed status
+        if final_state:
+            await db.update_query(query_id, {
+                "status": "completed",
+                "analysis": final_state.get("analysis"),
+                "chart_data": final_state.get("chart_data"),
+                "competitors": final_state.get("competitors"),
+                "company_info": final_state.get("company_info"),
+                "research_results": final_state.get("research_results"),
+                "extracted_data": final_state.get("extracted_data"),
+                "crawl_results": final_state.get("crawl_results"),
+                "completed_agents": final_state.get("completed_agents"),
+                "errors": final_state.get("errors"),
+                "completed_at": datetime.now(),
+                "updated_at": datetime.now()
+            })
         
         logger.info(f"Workflow completed for query {query_id}")
         

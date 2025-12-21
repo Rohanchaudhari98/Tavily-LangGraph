@@ -10,13 +10,11 @@ from app.api.routes import router
 from app.config import settings
 from app.services.mongodb_service import MongoDBService
 from app.services.mongodb_dependency import get_db
+from app.utils.logging_config import setup_logging
 import uvicorn
 
-# Set up logging
-logging.basicConfig(
-    level=getattr(logging, settings.log_level),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Set up logging with file output
+setup_logging(log_level=settings.log_level, log_dir="logs")
 
 logger = logging.getLogger(__name__)
 

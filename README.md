@@ -659,10 +659,10 @@ Tavily-LangGraph
 - **Total: ~$0.01 per query**
 
 **Per Query (Auto-Discovery, 2 competitors discovered, Standard mode):**
-- OpenAI GPT-4o: ~$0.02 (discovery agent - company analysis + validation)
+- OpenAI GPT-4o-mini: ~$0.002 (discovery agent - company analysis + validation)
 - Tavily API: ~$0.004 (discovery searches + 5 research searches)
-- OpenAI GPT-4o-mini: ~$0.008 (analysis) + ~$0.001 (chart data extraction)
-- **Total: ~$0.03 per query**
+- OpenAI GPT-4o-mini: ~$0.008 (analysis)
+**Total: ~$0.014 per query**
 
 **Per Query (Manual, 2 competitors, Premium mode):**
 - Tavily API: ~$0.002
@@ -670,9 +670,10 @@ Tavily-LangGraph
 - **Total: ~$0.60 per query**
 
 **Per Query (Auto-Discovery, 2 competitors discovered, Premium mode):**
-- OpenAI GPT-4o: ~$0.02 (discovery) + ~$0.60 (analysis)
+- OpenAI GPT-4o-mini: ~$0.002 (discovery)
 - Tavily API: ~$0.004
-- **Total: ~$0.62 per query**
+- OpenAI GPT-4o: ~$0.60 (analysis)
+**Total: ~$0.606 per query**
 
 **Monthly Estimate (100 queries, 50% auto-discovery):**
 - Standard mode: ~$2.00/month

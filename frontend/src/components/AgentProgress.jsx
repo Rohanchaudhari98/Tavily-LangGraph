@@ -1,10 +1,10 @@
 // Component to display the progress of different agents
 const AGENTS = [
-  { key: 'discovery', label: 'Discovery' },
-  { key: 'research', label: 'Research' },
-  { key: 'extraction', label: 'Extraction' },
-  { key: 'crawl', label: 'Crawl' },
-  { key: 'analysis', label: 'Analysis' }
+  { key: 'competitor_discovery', altKey: 'discovery', label: 'Discovery', description: 'Finds competitors automatically' },
+  { key: 'research', label: 'Research', description: 'Searches web for competitor info' },
+  { key: 'extraction', label: 'Extraction', description: 'Extracts structured data' },
+  { key: 'crawl', label: 'Crawl', description: 'Deep crawls competitor sites' },
+  { key: 'analysis', label: 'Analysis', description: 'Synthesizes final report' }
 ];
 
 export default function AgentProgress({ completed = [] }) {
@@ -18,8 +18,8 @@ export default function AgentProgress({ completed = [] }) {
       {/* Agent status list */}
       <div className="flex flex-wrap gap-3">
         {AGENTS.map((agent) => {
-          // Completion state for this agent
-          const done = completed.includes(agent.key);
+          // Completion state for this agent (check both key and altKey)
+          const done = completed.includes(agent.key) || (agent.altKey && completed.includes(agent.altKey));
 
           return (
             <div
@@ -33,6 +33,7 @@ export default function AgentProgress({ completed = [] }) {
                     : 'bg-gray-50 border-gray-300 text-gray-400'
                 }
               `}
+              title={agent.description}
             >
               {/* Status icon */}
               <span>{done ? '✅' : '⏳'}</span>
