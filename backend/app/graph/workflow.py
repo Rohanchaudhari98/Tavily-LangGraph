@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 def create_competitive_intelligence_workflow(
     tavily_api_key: str,
     openai_api_key: str,
-    use_premium_analysis: bool = False
+    use_premium_analysis: bool = False,
+    query_id: str = None,
+    db = None
 ) -> StateGraph:
     """
     Build the competitive intelligence workflow using LangGraph.
@@ -48,7 +50,9 @@ def create_competitive_intelligence_workflow(
     crawl_agent = CrawlAgent(tavily_api_key=tavily_api_key)
     analysis_agent = AnalysisAgent(
         openai_api_key=openai_api_key,
-        use_premium=use_premium_analysis
+        use_premium=use_premium_analysis,
+        query_id=query_id,
+        db=db
     )
     
     logger.info(f"Agents initialized:")

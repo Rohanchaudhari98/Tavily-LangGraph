@@ -53,7 +53,7 @@ export default function ResultsDisplay({ queryData }) {
   };
 
   const tabs = [
-    { id: 'analysis', label: 'Analysis', show: queryData.status === 'completed' },
+    { id: 'analysis', label: 'Analysis', show: queryData.status === 'completed' || queryData.analysis },
     { id: 'research', label: 'Research Results', show: queryData.research_results?.length > 0 },
     { id: 'metadata', label: 'Metadata', show: true },
   ];
@@ -231,7 +231,7 @@ export default function ResultsDisplay({ queryData }) {
           {/* Analysis Tab */}
           {activeTab === 'analysis' && (
             <div>
-              {queryData.status === 'completed' && queryData.analysis ? (
+              {(queryData.status === 'completed' || queryData.analysis) && queryData.analysis ? (
                 <div>
                   {/* Sub-tabs */}
                   <div className="flex space-x-1 mb-6 border-b border-gray-200">
@@ -253,10 +253,18 @@ export default function ResultsDisplay({ queryData }) {
 
                   {/* Narrative Section */}
                   {activeSubTab === 'narrative' && (
-                    <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
+                    <div>
+                      {/* Streaming indicator */}
+                      {queryData.status === 'processing' && queryData.analysis && (
+                        <div className="mb-4 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                          <div className="animate-pulse">⚡</div>
+                          <span>Analysis streaming in real-time...</span>
+                        </div>
+                      )}
+                      <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
                           h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
                           h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
                           h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
@@ -274,16 +282,17 @@ export default function ResultsDisplay({ queryData }) {
                           td: ({ node, ...props }) => <td className="border border-gray-300 px-3 py-1" {...props} />,
                         }}
                       >
-                        {queryData.analysis}
-                      </ReactMarkdown>
+                          {queryData.analysis}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   )}
 
                   {/* Charts Section */}
                   {activeSubTab === 'charts' && <ChartsView chartData={queryData.chart_data} />}
                 </div>
-              ) : queryData.status === 'processing' ? (
-                // Processing UI
+              ) : queryData.status === 'processing' && !queryData.analysis ? (
+                // Processing UI (only show if no analysis yet)
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>

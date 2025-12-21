@@ -23,10 +23,12 @@ class AnalysisAgent:
     - Premium (gpt-4o): Highest quality, more expensive
     """
     
-    def __init__(self, openai_api_key: str, use_premium: bool = False):
+    def __init__(self, openai_api_key: str, use_premium: bool = False, query_id: str = None, db = None):
         self.client = OpenAI(api_key=openai_api_key)
         self.name = "analysis"
         self.use_premium = use_premium
+        self.query_id = query_id 
+        self.db = db
         
         if use_premium:
             self.model = "gpt-4o"
@@ -75,12 +77,24 @@ class AnalysisAgent:
         logger.info(f"Context prepared: {len(analysis_context)} characters")
         
         try:
-            # Generate the analysis
+            # Generate the analysis with streaming
+            # Pass callback to update MongoDB during streaming
+            async def update_mongodb(partial_analysis: str):
+                if self.query_id and self.db and partial_analysis:
+                    try:
+                        await self.db.update_query(self.query_id, {
+                            "analysis": partial_analysis,
+                            "updated_at": datetime.now()
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to update MongoDB during streaming: {e}")
+            
             analysis_result = await self._generate_analysis(
                 query,
                 company_name,
                 competitors,
-                analysis_context
+                analysis_context,
+                update_callback=update_mongodb if self.query_id and self.db else None
             )
             
             logger.info(f"Analysis complete: {len(analysis_result)} characters")
@@ -175,9 +189,10 @@ class AnalysisAgent:
         query: str,
         company_name: str,
         competitors: List[str],
-        context: str
+        context: str,
+        update_callback=None
     ) -> str:
-        # Generate the competitive intelligence report using GPT
+        # Generate the competitive intelligence report using GPT with streaming
         system_prompt = f"""You are a competitive intelligence analyst working for {company_name}.
 
                             USER'S QUERY: "{query}"
@@ -276,12 +291,12 @@ class AnalysisAgent:
                         Provide comprehensive competitive analysis following the structure in your system prompt.
                         Skip section 6 (Additional Insights) if the query only asks about pricing, features, positioning, or risks."""
 
-        logger.info(f"Calling {self.model} for analysis...")
+        logger.info(f"Calling {self.model} for analysis (streaming)...")
         
-        # Wrap sync OpenAI call for async
+        # Use streaming for real-time updates
         loop = asyncio.get_event_loop()
         
-        response = await loop.run_in_executor(
+        stream = await loop.run_in_executor(
             None,
             lambda: self.client.chat.completions.create(
                 model=self.model,
@@ -290,29 +305,30 @@ class AnalysisAgent:
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.3,
-                max_tokens=3000
+                max_tokens=3000,
+                stream=True
             )
         )
         
-        analysis = response.choices[0].message.content
+        # Collect streamed chunks
+        analysis = ""
+        chunk_count = 0
         
-        usage = response.usage
-        logger.info(f"Tokens used: {usage.total_tokens} "
-                f"({usage.prompt_tokens} prompt + {usage.completion_tokens} completion)")
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                analysis += content
+                chunk_count += 1
+                
+                # Update MongoDB every 10 chunks (to avoid too many DB writes)
+                if update_callback and chunk_count % 10 == 0:
+                    await update_callback(analysis)
         
-        # Quick cost estimate
-        if self.use_premium:
-            # GPT-4o pricing (approx)
-            prompt_cost = usage.prompt_tokens * 0.000005
-            completion_cost = usage.completion_tokens * 0.000015
-            cost = prompt_cost + completion_cost
-        else:
-            # GPT-4o-mini pricing (approx)
-            prompt_cost = usage.prompt_tokens * 0.00000015
-            completion_cost = usage.completion_tokens * 0.0000006
-            cost = prompt_cost + completion_cost
+        # Final update
+        if update_callback:
+            await update_callback(analysis)
         
-        logger.info(f"Estimated cost: ${cost:.4f}")
+        logger.info(f"Analysis streamed: {len(analysis)} characters in {chunk_count} chunks")
         
         return analysis
     
