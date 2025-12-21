@@ -97,7 +97,8 @@ Postman Collection: https://rohan-chaudhari98-1649539.postman.co/workspace/Rohan
 
 ### System Architecture
 
-![graph](https://github.com/user-attachments/assets/c95c9734-efc0-41bd-99cd-c3fe379df533)
+![graph8](https://github.com/user-attachments/assets/32fab254-90ce-460c-a2bd-46a25f71c243)
+
 
 
 ### Data Flow
