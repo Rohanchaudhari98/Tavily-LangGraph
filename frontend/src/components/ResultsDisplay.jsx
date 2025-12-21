@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import ExportButtons from './ExportButtons';
 import ChartsView from './charts/ChartsView';
 import AgentProgress from './AgentProgress';
+import TypewriterText from './TypewriterText';
 
 export default function ResultsDisplay({ queryData }) {
   const [activeTab, setActiveTab] = useState('analysis');
@@ -262,28 +263,41 @@ export default function ResultsDisplay({ queryData }) {
                         </div>
                       )}
                       <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-                          h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-                          h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
-                          p: ({ node, ...props }) => <p className="leading-relaxed mb-4" {...props} />,
-                          li: ({ node, ...props }) => <li className="mb-2 ml-4 list-disc" {...props} />,
-                          code: ({ node, ...props }) => (
-                            <code className="bg-gray-200 text-gray-800 rounded px-1 py-0.5 text-sm" {...props} />
-                          ),
-                          table: ({ node, ...props }) => (
-                            <div className="overflow-x-auto my-4">
-                              <table className="table-auto border-collapse border border-gray-300 w-full" {...props} />
-                            </div>
-                          ),
-                          th: ({ node, ...props }) => <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />,
-                          td: ({ node, ...props }) => <td className="border border-gray-300 px-3 py-1" {...props} />,
-                        }}
-                      >
-                          {queryData.analysis}
-                        </ReactMarkdown>
+                        <TypewriterText
+                          text={queryData.analysis}
+                          speed={10}
+                          enabled={queryData.status === 'processing'}
+                        >
+                          {(displayedText, isStreaming) => (
+                            <>
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
+                                  h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
+                                  h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
+                                  p: ({ node, ...props }) => <p className="leading-relaxed mb-4" {...props} />,
+                                  li: ({ node, ...props }) => <li className="mb-2 ml-4 list-disc" {...props} />,
+                                  code: ({ node, ...props }) => (
+                                    <code className="bg-gray-200 text-gray-800 rounded px-1 py-0.5 text-sm" {...props} />
+                                  ),
+                                  table: ({ node, ...props }) => (
+                                    <div className="overflow-x-auto my-4">
+                                      <table className="table-auto border-collapse border border-gray-300 w-full" {...props} />
+                                    </div>
+                                  ),
+                                  th: ({ node, ...props }) => <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />,
+                                  td: ({ node, ...props }) => <td className="border border-gray-300 px-3 py-1" {...props} />,
+                                }}
+                              >
+                                {displayedText}
+                              </ReactMarkdown>
+                              {isStreaming && (
+                                <span className="inline-block w-0.5 h-5 bg-blue-600 ml-1 animate-pulse align-middle" />
+                              )}
+                            </>
+                          )}
+                        </TypewriterText>
                       </div>
                     </div>
                   )}

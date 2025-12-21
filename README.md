@@ -17,9 +17,15 @@ Swagger: https://api.tavilyapp.com/docs
   - Searches for direct competitors using Tavily
   - Validates and filters competitors for relevance
 - **Research Agent** - Gathers initial intelligence using Tavily AI search with freshness filtering
+  - **Real-time Progress**: Updates shown immediately upon completion
 - **Extraction Agent** - Extracts detailed structured data from competitor websites
+  - **Real-time Progress**: Updates shown immediately upon completion
 - **Crawl Agent** - Performs deep web crawling for comprehensive data collection
+  - **Real-time Progress**: Updates shown immediately upon completion
 - **Analysis Agent** - Synthesizes all data into strategic insights using GPT-4o-mini/GPT-4o
+  - **Streaming Output**: Analysis streams in real-time as it's generated
+  - **Typewriter Effect**: Text appears character by character (similar to ChatGPT/Claude)
+  - **Incremental Updates**: Partial analysis saved to MongoDB every 10 chunks
 
 ### Comprehensive Analysis
 - **Pricing Comparison** - Competitive pricing models and strategies
@@ -53,7 +59,11 @@ Swagger: https://api.tavilyapp.com/docs
 - **Interactive Data Visualization** - Charts tab with pricing, features, and risk visualizations using Recharts
 - **Query History** - Track and manage all your analyses with improved card layouts
 - **Export Reports** - Download as PDF or Word documents with professional formatting
-- **Real-time Updates** - Live progress tracking during analysis
+- **Real-time Agent Progress** - Live agent completion tracking with visual progress indicators
+- **Agent Collaboration Flow** - Visual diagram showing how agents collaborate in the workflow
+- **Complete Query-to-Result Flow** - Step-by-step visualization of the entire analysis pipeline
+- **Streaming Analysis** - Typewriter effect for real-time analysis display (similar to ChatGPT/Claude)
+- **Real-time Updates** - Live progress tracking with automatic polling every 3 seconds
 
 ### Analysis Modes
 - **Standard Mode** (GPT-4o-mini) - Fast, cost-effective analysis
@@ -65,10 +75,11 @@ Swagger: https://api.tavilyapp.com/docs
 
 **Backend:**
 - **Framework:** FastAPI (Python)
-- **AI Orchestration:** LangGraph
-- **LLM:** OpenAI GPT-4o / GPT-4o-mini
+- **AI Orchestration:** LangGraph with streaming support
+- **LLM:** OpenAI GPT-4o / GPT-4o-mini (with streaming)
 - **Search API:** Tavily AI
-- **Database:** MongoDB Atlas
+- **Database:** MongoDB Atlas with real-time updates
+- **Logging:** Structured logging with file rotation
 
 **Frontend:**
 - **Framework:** React 18 with Vite
@@ -79,6 +90,8 @@ Swagger: https://api.tavilyapp.com/docs
 - **Routing:** React Router v6
 - **Export:** jsPDF, docx
 - **Markdown:** react-markdown with enhanced prose styling
+- **Real-time Updates:** Polling mechanism with 3-second intervals
+- **Typewriter Effect:** Custom component for streaming text display
 
 ### System Architecture
 
@@ -93,11 +106,21 @@ Swagger: https://api.tavilyapp.com/docs
    - **Freshness Filter**: Choose time range for search results (anytime, 1 month, 3 months, 6 months, 1 year)
    - **Premium Analysis**: Choose which model you would want to use (GPT-4o-mini vs GPT-4o)
 2. **Discovery Agent** (if enabled) - Uses GPT-4o-mini to understand company domain, then Tavily to discover relevant competitors
+   - **Real-time Update**: Progress shown immediately when agent completes
 3. **Research Agent** - Searches for each competitor using Tavily AI with freshness filtering applied
+   - **Real-time Update**: Progress shown immediately when agent completes
 4. **Extraction Agent** - Extracts structured data from competitor websites
+   - **Real-time Update**: Progress shown immediately when agent completes
 5. **Crawl Agent** - Performs deep crawling for additional context and hidden information
+   - **Real-time Update**: Progress shown immediately when agent completes
 6. **Analysis Agent** - Synthesizes all data into comprehensive strategic report
+   - **Streaming Output**: Analysis streams in real-time with typewriter effect
+   - **Live Updates**: Partial analysis visible as it's generated (updates every 10 chunks)
+   - **MongoDB Updates**: Analysis saved incrementally to database during generation
 7. **Results displayed** in three tabs: Analysis, Research Results, Metadata
+   - **Agent Collaboration Flow**: Visual diagram showing complete workflow
+   - **Real-time Progress**: Agent completion status updates live
+   - **Streaming Analysis**: Text types out character by character as it's generated
 8. **Export options** available as PDF or Word documents
 
 ## 🚀 Getting Started
@@ -200,12 +223,17 @@ Frontend will run on `http://localhost:5173`
 3. **Click "Analyze Competitors"**
    - Auto-discovery queries take 30-40 seconds (includes discovery phase)
    - Manual queries take 20-30 seconds
-   - Progress shown in real-time with agent status
-   - Page auto-refreshes every 3 seconds
+   - **Real-time Agent Progress** - Watch agents complete one by one with live updates
+   - **Agent Collaboration Flow** - See visual diagram of agent workflow
+   - **Streaming Analysis** - Analysis appears with typewriter effect as it's generated
+   - Page auto-refreshes every 3 seconds to show latest progress
 
 4. **View Results:**
+   - **Agent Collaboration Section** - Shows agent progress cards and complete workflow diagram
    - **Analysis Tab:** 
      - **Narrative Sub-tab:** Comprehensive strategic report in markdown format
+       - **Streaming Display** - Text types out in real-time with typewriter effect (similar to ChatGPT)
+       - **Live Updates** - Analysis appears as it's generated, not just at the end
      - **Charts Sub-tab:** Interactive visualizations (Pricing Bar Chart, Feature Radar, Risk Matrix)
    - **Research Results Tab:** AI summaries and source links from Tavily
    - **Metadata Tab:** Query details, processing info, and discovery mode
