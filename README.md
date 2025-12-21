@@ -634,6 +634,7 @@ Tavily-LangGraph
 │   │   │   ├── ErrorBoundary.jsx      # Error Handling
 │   │   │   ├── LoadingSpinner.jsx     # Spinner
 │   │   │   ├── LoadingSpinner.test.jsx
+│   │   │   ├── TypewriterText.jsx
 │   │   │   └── charts/
 │   │   │       ├── ChartsView.jsx     # Main charts container
 │   │   │       ├── PricingChart.jsx   # Bar chart for pricing comparison
