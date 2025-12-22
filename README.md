@@ -107,6 +107,7 @@ Postman Collection: https://rohan-chaudhari98-1649539.postman.co/workspace/Rohan
 - **Performance**: Parallel execution reduces Extraction+Crawl phase time by ~50% (from ~20s to ~10s)
 - **State Management**: LangGraph handles state merging for parallel nodes using reducer functions
 
+![graph9](https://github.com/user-attachments/assets/6b048c79-ab5b-433e-a605-b5b5f8cf5980)
 
 
 ### Data Flow
