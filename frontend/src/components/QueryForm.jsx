@@ -69,7 +69,7 @@ export default function QueryForm() {
             required
             value={formData.company_name}
             onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-            placeholder="e.g., Tavily"
+            placeholder="e.g., Tavily AI"
             className="input-field"
           />
         </div>
