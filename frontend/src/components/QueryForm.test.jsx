@@ -65,7 +65,7 @@ describe('QueryForm', () => {
   // Test that basic form fields render
   it('renders form fields', () => {
     renderQueryForm();
-    expect(screen.getByPlaceholderText(/e.g., Tavily AI/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/e.g., Tavily/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/pricing strategy/i)).toBeInTheDocument();
     expect(screen.getByText(/freshness filter/i)).toBeInTheDocument();
     expect(screen.getAllByText(/auto-discovery/i).length).toBeGreaterThan(0);
@@ -76,7 +76,7 @@ describe('QueryForm', () => {
     const user = userEvent.setup();
     renderQueryForm();
 
-    const companyInput = screen.getByPlaceholderText(/e.g., Tavily AI/i);
+    const companyInput = screen.getByPlaceholderText(/e.g., Tavily/i);
     const queryInput = screen.getByPlaceholderText(/pricing strategy/i);
 
     await user.type(companyInput, 'Tavily');
@@ -124,7 +124,7 @@ describe('QueryForm', () => {
     renderQueryForm();
 
     // Fill in required fields
-    await user.type(screen.getByPlaceholderText(/e.g., Tavily AI/i), 'Netflix');
+    await user.type(screen.getByPlaceholderText(/e.g., Tavily/i), 'Netflix');
     await user.type(screen.getByPlaceholderText(/pricing strategy/i), 'Compare pricing');
 
     // Enable auto-discovery

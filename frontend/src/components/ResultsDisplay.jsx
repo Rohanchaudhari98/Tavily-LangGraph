@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import ExportButtons from './ExportButtons';
 import ChartsView from './charts/ChartsView';
 import AgentProgress from './AgentProgress';
+import TypewriterText from './TypewriterText';
 
 export default function ResultsDisplay({ queryData }) {
   const [activeTab, setActiveTab] = useState('analysis');
@@ -23,6 +24,7 @@ export default function ResultsDisplay({ queryData }) {
   const totalAgents = queryData.total_agents || (queryData.use_auto_discovery ? 5 : 4);
   const completedAgentsCount = queryData.completed_agents?.length || 0;
 
+  // Format freshness for display
   const formatFreshness = (freshness) => {
     const freshnessMap = {
       anytime: 'Anytime (All results)',
@@ -34,6 +36,7 @@ export default function ResultsDisplay({ queryData }) {
     return freshnessMap[freshness] || 'Anytime';
   };
 
+  // Render status badge
   const renderStatus = () => {
     const statusConfig = {
       processing: { className: 'status-badge-processing', icon: '⏳', label: 'Processing', animate: true },
@@ -190,6 +193,7 @@ export default function ResultsDisplay({ queryData }) {
               </span>
             </div>
             
+            {/* Agent Collaboration Explanation */}
             {queryData.status === 'processing' && (
               <div className="mt-4 p-4 bg-white/60 rounded-lg border border-blue-200">
                 <p className="text-xs text-gray-600 leading-relaxed">
@@ -205,6 +209,7 @@ export default function ResultsDisplay({ queryData }) {
 
       {/* Analysis Tabs Card */}
       <div className="card p-8">
+        {/* Main Tabs */}
         <div className="border-b-2 border-gray-200 mb-8">
           <nav className="flex space-x-8 -mb-px">
             {tabs.filter(tab => tab.show).map(tab => (
@@ -250,35 +255,50 @@ export default function ResultsDisplay({ queryData }) {
                   {/* Narrative Section */}
                   {activeSubTab === 'narrative' && (
                     <div>
-                      {queryData.status === 'processing' && (
+                      {/* Streaming indicator */}
+                      {queryData.status === 'processing' && queryData.analysis && (
                         <div className="mb-4 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
                           <div className="animate-pulse">⚡</div>
-                          <span>Analysis in progress...</span>
+                          <span>Analysis streaming in real-time...</span>
                         </div>
                       )}
-                      <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
-                            h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
-                            h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
-                            p: ({ node, ...props }) => <p className="leading-relaxed mb-4" {...props} />,
-                            li: ({ node, ...props }) => <li className="mb-2 ml-4 list-disc" {...props} />,
-                            code: ({ node, ...props }) => (
-                              <code className="bg-gray-200 text-gray-800 rounded px-1 py-0.5 text-sm" {...props} />
-                            ),
-                            table: ({ node, ...props }) => (
-                              <div className="overflow-x-auto my-4">
-                                <table className="table-auto border-collapse border border-gray-300 w-full" {...props} />
-                              </div>
-                            ),
-                            th: ({ node, ...props }) => <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />,
-                            td: ({ node, ...props }) => <td className="border border-gray-300 px-3 py-1" {...props} />,
-                          }}
+                    <div className="prose prose-lg max-w-none overflow-x-auto bg-white/5 p-6 rounded-xl shadow-sm">
+                        <TypewriterText
+                          text={queryData.analysis || ''}
+                          speed={10}
+                          enabled={true}
+                          isStreaming={queryData.status === 'processing'}
                         >
-                          {queryData.analysis}
-                        </ReactMarkdown>
+                          {(displayedText, isStreaming) => (
+                            <>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />,
+                          h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />,
+                          h3: ({ node, ...props }) => <h3 className="text-lg font-semibold mt-4 mb-2" {...props} />,
+                          p: ({ node, ...props }) => <p className="leading-relaxed mb-4" {...props} />,
+                          li: ({ node, ...props }) => <li className="mb-2 ml-4 list-disc" {...props} />,
+                          code: ({ node, ...props }) => (
+                            <code className="bg-gray-200 text-gray-800 rounded px-1 py-0.5 text-sm" {...props} />
+                          ),
+                          table: ({ node, ...props }) => (
+                            <div className="overflow-x-auto my-4">
+                              <table className="table-auto border-collapse border border-gray-300 w-full" {...props} />
+                            </div>
+                          ),
+                          th: ({ node, ...props }) => <th className="border border-gray-300 bg-gray-100 px-3 py-1 text-left" {...props} />,
+                          td: ({ node, ...props }) => <td className="border border-gray-300 px-3 py-1" {...props} />,
+                        }}
+                      >
+                                {displayedText}
+                      </ReactMarkdown>
+                              {isStreaming && (
+                                <span className="inline-block w-0.5 h-5 bg-blue-600 ml-1 animate-pulse align-middle" />
+                              )}
+                            </>
+                          )}
+                        </TypewriterText>
                       </div>
                     </div>
                   )}
@@ -287,6 +307,7 @@ export default function ResultsDisplay({ queryData }) {
                   {activeSubTab === 'charts' && <ChartsView chartData={queryData.chart_data} />}
                 </div>
               ) : queryData.status === 'processing' && !queryData.analysis ? (
+                // Processing UI (only show if no analysis yet)
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
@@ -301,6 +322,7 @@ export default function ResultsDisplay({ queryData }) {
                   </div>
                 </div>
               ) : (
+                // Failed / unavailable
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="text-4xl">⚠️</span>
@@ -403,6 +425,7 @@ export default function ResultsDisplay({ queryData }) {
                 </dl>
               </div>
 
+              {/* Processing Details */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
                   <span>⚙️</span>
