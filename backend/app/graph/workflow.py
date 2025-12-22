@@ -30,12 +30,15 @@ def create_competitive_intelligence_workflow(
     """
     Build the competitive intelligence workflow using LangGraph.
     
-    Connects 5 agents with conditional routing:
+    Connects 5 agents with conditional routing and parallel execution:
     1. Discovery Agent (optional) - Finds competitors
     2. Research Agent - Searches via Tavily
-    3. Extraction Agent - Gets page content via Tavily
-    4. Crawl Agent - Deep dives into sites via Tavily
+    3. Extraction Agent - Gets page content via Tavily (runs in parallel with Crawl)
+    4. Crawl Agent - Deep dives into sites via Tavily (runs in parallel with Extraction)
     5. Analysis Agent - Synthesizes everything with GPT-4
+    
+    Note: Extraction and Crawl run in parallel after Research completes,
+    then both must finish before Analysis starts.
     """
     
     logger.info("Building workflow...")
@@ -79,7 +82,31 @@ def create_competitive_intelligence_workflow(
         Decide whether to start with discovery or jump to research.
         Returns 'discovery' if auto-discovery enabled, otherwise 'research'.
         """
-        if state.get("use_auto_discovery", False):
+        # Access state - handle both dict and object access
+        use_auto_discovery = False
+        
+        if isinstance(state, dict):
+            use_auto_discovery = state.get("use_auto_discovery", False)
+        elif hasattr(state, "use_auto_discovery"):
+            use_auto_discovery = getattr(state, "use_auto_discovery", False)
+        elif hasattr(state, "get"):
+            use_auto_discovery = state.get("use_auto_discovery", False)
+        
+        # Ensure it's a boolean
+        if isinstance(use_auto_discovery, str):
+            use_auto_discovery = use_auto_discovery.lower() in ("true", "1", "yes")
+        else:
+            use_auto_discovery = bool(use_auto_discovery) if use_auto_discovery is not None else False
+        
+        # Log full state for debugging
+        logger.info(f"Routing function called - state type: {type(state)}")
+        if isinstance(state, dict):
+            logger.info(f"State keys: {list(state.keys())}")
+            logger.info(f"use_auto_discovery in state: {'use_auto_discovery' in state}")
+            logger.info(f"use_auto_discovery value: {state.get('use_auto_discovery')}")
+        logger.info(f"Routing decision - use_auto_discovery: {use_auto_discovery}")
+        
+        if use_auto_discovery:
             logger.info("Auto-discovery enabled - starting with discovery agent")
             return "discovery"
         else:
@@ -95,14 +122,37 @@ def create_competitive_intelligence_workflow(
         }
     )
     
+    # Join node to ensure both extraction and crawl complete before analysis
+    def join_data_collection(state: CompetitiveIntelligenceState) -> CompetitiveIntelligenceState:
+        """
+        Join node that waits for both extraction and crawl to complete.
+        This ensures analysis only runs after both agents finish.
+        """
+        logger.info("Data collection complete - both extraction and crawl finished")
+        return {
+            **state,
+            "current_step": "data_collection_complete"
+        }
+    
+    # Add join node
+    workflow.add_node("join_data", join_data_collection)
+    
     # Connect the agents
     workflow.add_edge("discovery", "research")
+    
+    # Fan out from research to both extraction and crawl (parallel execution)
     workflow.add_edge("research", "extraction")
-    workflow.add_edge("extraction", "crawl")
-    workflow.add_edge("crawl", "analyze")
+    workflow.add_edge("research", "crawl")
+    
+    # Both extraction and crawl must complete before join
+    workflow.add_edge("extraction", "join_data")
+    workflow.add_edge("crawl", "join_data")
+    
+    # Join to analysis
+    workflow.add_edge("join_data", "analyze")
     workflow.add_edge("analyze", END)
     
-    logger.info("Flow: START → [discovery OR research] → extraction → crawl → analyze → END")
+    logger.info("Flow: START → [discovery OR research] → [extraction + crawl (parallel)] → join_data → analyze → END")
     
     # Compile and return
     compiled_workflow = workflow.compile()
@@ -135,7 +185,7 @@ def create_initial_state(
     else:
         logger.info(f"  Competitors: {', '.join(competitors)}")
     
-    return CompetitiveIntelligenceState(
+    initial_state = CompetitiveIntelligenceState(
         # Input
         query=query,
         company_name=company_name,
@@ -161,3 +211,8 @@ def create_initial_state(
         started_at=datetime.now(),
         updated_at=datetime.now()
     )
+    
+    # Verify the state was created correctly
+    logger.info(f"Initial state created - use_auto_discovery type: {type(initial_state.get('use_auto_discovery'))}, value: {initial_state.get('use_auto_discovery')}")
+    
+    return initial_state

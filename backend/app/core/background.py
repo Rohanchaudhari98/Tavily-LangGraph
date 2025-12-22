@@ -57,6 +57,9 @@ async def run_workflow_background(
             freshness=freshness
         )
         
+        # Verify state before streaming
+        logger.info(f"State before astream - use_auto_discovery: {initial_state.get('use_auto_discovery')}, type: {type(initial_state.get('use_auto_discovery'))}")
+        
         # Use streaming to get real-time updates after each agent
         final_state = None
         last_analysis_update = None
@@ -66,49 +69,74 @@ async def run_workflow_background(
             # Get the latest state from the last node that executed
             for node_name, node_state in state.items():
                 final_state = node_state
+            
+            # Update MongoDB after each agent completes
+            completed_agents = node_state.get("completed_agents", [])
+            
+            # Check if analysis is being generated (partial update)
+            current_analysis = node_state.get("analysis")
+            is_analysis_agent = node_name == "analyze" or "analysis" in completed_agents
+            
+            # Update MongoDB with current progress
+            update_data = {
+                "status": "processing",
+                "competitors": node_state.get("competitors", []),
+                "company_info": node_state.get("company_info"),
+                "research_results": node_state.get("research_results", []),
+                "extracted_data": node_state.get("extracted_data", []),
+                "crawl_results": node_state.get("crawl_results", []),
+                "completed_agents": completed_agents,
+                "current_step": node_state.get("current_step", "processing"),
+                "errors": node_state.get("errors", []),
+                "updated_at": datetime.now()
+            }
+            
+            # If analysis exists (even partial), include it
+            if current_analysis:
+                update_data["analysis"] = current_analysis
+                # Only update chart_data if analysis is complete (has all sections)
+                if node_state.get("chart_data"):
+                    update_data["chart_data"] = node_state.get("chart_data")
                 
-                # Update MongoDB after each agent completes
-                completed_agents = node_state.get("completed_agents", [])
-                
-                # Check if analysis is being generated (partial update)
-                current_analysis = node_state.get("analysis")
-                is_analysis_agent = node_name == "analyze" or "analysis" in completed_agents
-                
-                # Update MongoDB with current progress
-                update_data = {
-                    "status": "processing",
-                    "competitors": node_state.get("competitors", []),
-                    "company_info": node_state.get("company_info"),
-                    "research_results": node_state.get("research_results", []),
-                    "extracted_data": node_state.get("extracted_data", []),
-                    "crawl_results": node_state.get("crawl_results", []),
-                    "completed_agents": completed_agents,
-                    "current_step": node_state.get("current_step", "processing"),
-                    "errors": node_state.get("errors", []),
-                    "updated_at": datetime.now()
-                }
-                
-                # If analysis exists (even partial), include it
-                if current_analysis:
-                    update_data["analysis"] = current_analysis
-                    # Only update chart_data if analysis is complete (has all sections)
-                    if node_state.get("chart_data"):
-                        update_data["chart_data"] = node_state.get("chart_data")
-                    
-                    # Update more frequently during analysis generation
+                    # Update less frequently during analysis generation on AWS (reduce DB overhead)
+                    # Only update if analysis has grown significantly or every 5 seconds
                     if is_analysis_agent and current_analysis != last_analysis_update:
-                        await db.update_query(query_id, update_data)
-                        last_analysis_update = current_analysis
-                        logger.info(f"Updated query {query_id}: Analysis streaming ({len(current_analysis)} chars)")
-                elif completed_agents:
-                    # Regular agent completion update
-                    await db.update_query(query_id, update_data)
-                    logger.info(f"Updated query {query_id}: {len(completed_agents)} agents completed")
+                        # Update if analysis grew by >500 chars or if it's been a while
+                        should_update = (
+                            len(current_analysis) - len(last_analysis_update or "") > 500
+                        ) if last_analysis_update else True
+                        
+                        if should_update:
+                            await db.update_query(query_id, update_data)
+                            last_analysis_update = current_analysis
+                            logger.info(f"Updated query {query_id}: Analysis streaming ({len(current_analysis)} chars)")
+            elif completed_agents:
+                # Regular agent completion update
+                await db.update_query(query_id, update_data)
+                logger.info(f"Updated query {query_id}: {len(completed_agents)} agents completed")
         
         # Final update with completed status
         if final_state:
+            # Check if analysis agent completed successfully
+            completed_agents = final_state.get("completed_agents", [])
+            has_analysis = final_state.get("analysis") is not None
+            
+            # Determine status based on completion
+            if "analysis" in completed_agents and has_analysis:
+                status = "completed"
+            elif "analysis" in completed_agents and not has_analysis:
+                # Analysis agent ran but produced no output
+                status = "completed"  # Still mark as completed, but with error
+                errors = final_state.get("errors", [])
+                if not any("analysis" in str(e).lower() for e in errors):
+                    errors.append("Analysis completed but no content was generated")
+                final_state["errors"] = errors
+            else:
+                # Analysis agent didn't complete
+                status = "failed"
+            
             await db.update_query(query_id, {
-                "status": "completed",
+                "status": status,
                 "analysis": final_state.get("analysis"),
                 "chart_data": final_state.get("chart_data"),
                 "competitors": final_state.get("competitors"),
@@ -116,18 +144,45 @@ async def run_workflow_background(
                 "research_results": final_state.get("research_results"),
                 "extracted_data": final_state.get("extracted_data"),
                 "crawl_results": final_state.get("crawl_results"),
-                "completed_agents": final_state.get("completed_agents"),
+                "completed_agents": completed_agents,
                 "errors": final_state.get("errors"),
-                "completed_at": datetime.now(),
+                "completed_at": datetime.now() if status == "completed" else None,
                 "updated_at": datetime.now()
             })
-        
-        logger.info(f"Workflow completed for query {query_id}")
+            
+            logger.info(f"Workflow {'completed' if status == 'completed' else 'ended'} for query {query_id}")
+        else:
+            # No final state - workflow stream may have ended unexpectedly
+            logger.warning(f"Workflow stream ended without final state for query {query_id}")
+            # Try to get the last known state from MongoDB
+            try:
+                last_query = await db.get_query(query_id)
+                if last_query:
+                    completed_agents = last_query.get("completed_agents", [])
+                    if "analysis" in completed_agents:
+                        # Analysis completed but stream ended before final update
+                        await db.update_query(query_id, {
+                            "status": "completed",
+                            "completed_at": datetime.now(),
+                            "updated_at": datetime.now()
+                        })
+                        logger.info(f"Marked query {query_id} as completed based on last known state")
+                    else:
+                        await db.update_query(query_id, {
+                            "status": "failed",
+                            "errors": ["Workflow stream ended unexpectedly"],
+                            "updated_at": datetime.now()
+                        })
+            except Exception as e:
+                logger.error(f"Failed to update query status from last known state: {e}")
         
     except Exception as e:
-        logger.error(f"Workflow failed for query {query_id}: {str(e)}")
-        await db.update_query(query_id, {
-            "status": "failed",
-            "errors": [str(e)],
-            "updated_at": datetime.now()
-        })
+        logger.error(f"Workflow failed for query {query_id}: {str(e)}", exc_info=True)
+        try:
+            await db.update_query(query_id, {
+                "status": "failed",
+                "errors": [str(e)],
+                "updated_at": datetime.now()
+            })
+        except Exception as db_error:
+            logger.error(f"Failed to update query status to failed: {db_error}")
