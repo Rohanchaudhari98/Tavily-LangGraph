@@ -1,5 +1,5 @@
 // Page to display results of a specific query
-// Handles loading, error states, and polling for updates if the query is processing
+// Handles loading, error states, smart polling, and frontend completion fix
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -8,45 +8,105 @@ import ResultsDisplay from '../components/ResultsDisplay';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function ResultsPage() {
-  const { queryId } = useParams(); // Extract query ID from route
+  const { queryId } = useParams();
   const navigate = useNavigate();
 
-  const [queryData, setQueryData] = useState(null); // Stores query result
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
-  const statusRef = useRef(null); // Track current status to avoid stale closure
+  const [queryData, setQueryData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const statusRef = useRef(null);
 
-  // Fetch query data on mount and set up polling for processing queries
+  // Helper to merge new data with existing queryData
+  const mergeQueryData = (newData) => {
+    setQueryData((prev) => {
+      if (!prev) return newData;
+      return {
+        ...prev,
+        ...newData,
+        completed_agents: Array.from(new Set([...(prev.completed_agents || []), ...(newData.completed_agents || [])])),
+      };
+    });
+  };
+
   useEffect(() => {
-    fetchQueryData();
+    let isMounted = true;
+    let delay = 3000;
 
-    // Poll every 3 seconds while query is processing
-    const interval = setInterval(() => {
-      // Check current status from ref (always up-to-date)
-      if (!statusRef.current || statusRef.current === 'processing') {
-        fetchQueryData();
+    const pollQuery = async () => {
+      if (!isMounted || isFetching) return;
+
+      setIsFetching(true);
+      try {
+        const data = await getQuery(queryId);
+        if (!isMounted) return;
+
+        // Frontend-only completion fix
+        if (data.analysis && !(data.completed_agents || []).includes('analysis')) {
+          data.completed_agents = [...(data.completed_agents || []), 'analysis'];
+        }
+        if (data.analysis && data.status !== 'completed') {
+          data.status = 'completed';
+          if (!data.completed_agents.includes('final_report')) {
+            data.completed_agents.push('final_report');
+          }
+        }
+
+        mergeQueryData(data);
+        statusRef.current = data?.status;
+        setLoading(false);
+        setError(null);
+
+        // Only poll again if still processing
+        if (data?.status === 'processing') {
+          delay = Math.min(delay * 1.5, 15000);
+          setTimeout(pollQuery, delay);
+        }
+      } catch (err) {
+        console.error('Failed to fetch query:', err);
+        if (!isMounted) return;
+        setError('Failed to load query results');
+        setLoading(false);
+      } finally {
+        setIsFetching(false);
       }
-    }, 3000);
+    };
 
-    // Clear interval on unmount
-    return () => clearInterval(interval);
+    pollQuery();
+
+    return () => {
+      isMounted = false;
+    };
   }, [queryId]);
 
-  // Function to fetch query details from API
-  const fetchQueryData = async () => {
+  const handleManualRefresh = async () => {
+    if (isFetching) return;
+    setIsFetching(true);
     try {
       const data = await getQuery(queryId);
-      setQueryData(data);
-      statusRef.current = data?.status; // Update ref with latest status
-      setLoading(false);
+
+      // Same frontend completion fix for manual refresh
+      if (data.analysis && !(data.completed_agents || []).includes('analysis')) {
+        data.completed_agents = [...(data.completed_agents || []), 'analysis'];
+      }
+      if (data.analysis && data.status !== 'completed') {
+        data.status = 'completed';
+        if (!data.completed_agents.includes('final_report')) {
+          data.completed_agents.push('final_report');
+        }
+      }
+
+      mergeQueryData(data);
+      statusRef.current = data?.status;
+      setError(null);
     } catch (err) {
-      console.error('Failed to fetch query:', err);
-      setError('Failed to load query results');
-      setLoading(false);
+      console.error('Manual refresh failed:', err);
+      setError('Failed to refresh query results');
+    } finally {
+      setIsFetching(false);
     }
   };
 
-  // Show loading spinner while fetching data
   if (loading) {
     return (
       <div className="min-h-screen py-12 px-4">
@@ -57,21 +117,16 @@ export default function ResultsPage() {
     );
   }
 
-  // Show error message if fetching fails
   if (error) {
     return (
       <div className="min-h-screen py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="card p-12 text-center">
-            {/* Error icon */}
             <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl">⚠️</span>
             </div>
-            {/* Error title */}
             <h2 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Results</h2>
-            {/* Error description */}
             <p className="text-gray-600 mb-8 text-lg">{error}</p>
-            {/* Back to home button */}
             <button onClick={() => navigate('/')} className="btn-primary">
               Back to Home
             </button>
@@ -84,11 +139,8 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-
-        {/* Navigation buttons for new analysis, history, and refresh */}
+        {/* Navigation buttons */}
         <div className="mb-8 flex gap-3">
-          
-          {/* New Analysis button */}
           <button
             onClick={() => navigate('/')}
             className="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-5
@@ -100,7 +152,6 @@ export default function ResultsPage() {
             New Analysis
           </button>
 
-          {/* History page button */}
           <button
             onClick={() => navigate('/history')}
             className="bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-5
@@ -112,18 +163,18 @@ export default function ResultsPage() {
             History
           </button>
 
-          {/* Refresh button, only active if query is processing */}
           <button
-            onClick={fetchQueryData}
+            onClick={handleManualRefresh}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700
                        text-white font-medium py-2.5 px-5 rounded-xl
                        shadow-md hover:shadow-lg transition-all duration-200
                        disabled:opacity-50 disabled:cursor-not-allowed
                        flex items-center gap-2"
-            disabled={queryData?.status !== 'processing'}
+            disabled={queryData?.status !== 'processing' || isFetching}
           >
-            {/* Spinner icon if processing */}
-            <span className={queryData?.status === 'processing' ? 'animate-spin' : ''}>🔄</span>
+            <span className={queryData?.status === 'processing' && isFetching ? 'animate-spin' : ''}>
+              🔄
+            </span>
             Refresh
           </button>
         </div>
