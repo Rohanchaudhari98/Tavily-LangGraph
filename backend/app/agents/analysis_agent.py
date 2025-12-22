@@ -24,11 +24,7 @@ class AnalysisAgent:
     """
     
     def __init__(self, openai_api_key: str, use_premium: bool = False, query_id: str = None, db = None):
-        self.client = OpenAI(
-            api_key=openai_api_key,
-            timeout=180.0,  # 3 minute timeout for streaming (longer for analysis)
-            max_retries=3
-        )
+        self.client = OpenAI(api_key=openai_api_key)
         self.name = "analysis"
         self.use_premium = use_premium
         self.query_id = query_id 
@@ -300,79 +296,41 @@ class AnalysisAgent:
         # Use streaming for real-time updates
         loop = asyncio.get_event_loop()
         
-        try:
-            stream = await loop.run_in_executor(
-                None,
-                lambda: self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    temperature=0.3,
-                    max_tokens=4000,  # Increased to prevent truncation
-                    stream=True
-                )
+        stream = await loop.run_in_executor(
+            None,
+            lambda: self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.3,
+                max_tokens=3000,
+                stream=True
             )
-            
-            # Collect streamed chunks
-            analysis = ""
-            chunk_count = 0
-            
-            try:
-                for chunk in stream:
-                    # Check if stream was interrupted
-                    if not chunk.choices:
-                        logger.warning("Received empty chunk, stream may have ended")
-                        break
-                    
-                    # Check for finish reason (stream completion) - check before processing content
-                    if chunk.choices[0].finish_reason:
-                        logger.info(f"Stream finished with reason: {chunk.choices[0].finish_reason}")
-                        if chunk.choices[0].finish_reason == "length":
-                            logger.warning("Analysis was truncated due to max_tokens limit")
-                        break
-                    
-                    if chunk.choices[0].delta.content:
-                        content = chunk.choices[0].delta.content
-                        analysis += content
-                        chunk_count += 1
-                        
-                        # Update MongoDB every 20 chunks on AWS (less frequent to reduce overhead)
-                        # More frequent updates on localhost for better UX
-                        update_frequency = 20  # Reduced from 10 to reduce AWS DB overhead
-                        if update_callback and chunk_count % update_frequency == 0:
-                            try:
-                                await update_callback(analysis)
-                            except Exception as e:
-                                logger.warning(f"Failed to update MongoDB during streaming: {e}")
-                                # Continue streaming even if update fails
+        )
+        
+        # Collect streamed chunks
+        analysis = ""
+        chunk_count = 0
+        
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                analysis += content
+                chunk_count += 1
                 
-            except Exception as stream_error:
-                logger.error(f"Error during stream processing: {str(stream_error)}")
-                # Return partial analysis if we have any
-                if analysis:
-                    logger.warning(f"Returning partial analysis ({len(analysis)} chars) due to stream error")
-                else:
-                    raise  # Re-raise if we have no analysis at all
-            
-            # Final update
-            if update_callback and analysis:
-                try:
+                # Update MongoDB every 10 chunks (to avoid too many DB writes)
+                if update_callback and chunk_count % 10 == 0:
                     await update_callback(analysis)
-                except Exception as e:
-                    logger.warning(f"Failed final MongoDB update: {e}")
-            
-            logger.info(f"Analysis streamed: {len(analysis)} characters in {chunk_count} chunks")
-            
-            if not analysis:
-                raise ValueError("Analysis stream completed but no content was received")
-            
-            return analysis
-            
-        except Exception as e:
-            logger.error(f"Failed to generate analysis stream: {str(e)}")
-            raise
+        
+        # Final update
+        if update_callback:
+            await update_callback(analysis)
+        
+        logger.info(f"Analysis streamed: {len(analysis)} characters in {chunk_count} chunks")
+        
+        return analysis
     
     async def _extract_chart_data(
         self,

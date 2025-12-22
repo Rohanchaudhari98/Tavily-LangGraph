@@ -1,95 +1,83 @@
 // Typewriter effect component for streaming text
-// During active streaming, shows text immediately. Typewriter effect only when complete.
+// Similar to ChatGPT/Claude's streaming display
+// Works with ReactMarkdown by rendering children with the displayed text
 
 import { useState, useEffect, useRef } from 'react';
 
-export default function TypewriterText({ text = '', speed = 15, enabled = true, isStreaming = false, children }) {
+export default function TypewriterText({ text = '', speed = 15, enabled = true, children }) {
   const [displayedText, setDisplayedText] = useState('');
+  const textRef = useRef(text);
   const indexRef = useRef(0);
   const timeoutRef = useRef(null);
-  const lastTextRef = useRef('');
+  const lastTextLengthRef = useRef(0);
 
   useEffect(() => {
-    if (!enabled || !text) {
-      // If disabled or no text, show full text immediately
-      setDisplayedText(text || '');
-      indexRef.current = text ? text.length : 0;
-      lastTextRef.current = text || '';
+    // Update the ref when text changes
+    textRef.current = text;
+  }, [text]);
+
+  useEffect(() => {
+    if (!enabled) {
+      // If disabled, show full text immediately
+      setDisplayedText(text);
+      lastTextLengthRef.current = text.length;
+      indexRef.current = text.length;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
       }
       return;
     }
 
     // If text got shorter (new content started), reset
-    if (text.length < lastTextRef.current.length) {
+    if (text.length < lastTextLengthRef.current) {
       setDisplayedText(text);
       indexRef.current = text.length;
-      lastTextRef.current = text;
+      lastTextLengthRef.current = text.length;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
       }
       return;
     }
 
-    // During active streaming: show text immediately (no typewriter effect)
-    if (isStreaming) {
-      setDisplayedText(text);
-      indexRef.current = text.length;
-      lastTextRef.current = text;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      return;
-    }
-
-    // Typewriter effect only when NOT actively streaming (text is complete or paused)
-    // If we're already displaying all the text, just update
+    // If we're already displaying all the text, no need to animate
     if (indexRef.current >= text.length) {
-      setDisplayedText(text);
-      lastTextRef.current = text;
+      lastTextLengthRef.current = text.length;
       return;
     }
 
-    // If new text arrived while we were typing, catch up quickly
-    const charsBehind = text.length - indexRef.current;
-    const shouldCatchUp = charsBehind > 50; // If more than 50 chars behind, catch up faster
+    // Don't restart if we're already typing
+    if (timeoutRef.current) {
+      return;
+    }
 
     const typeNext = () => {
       if (indexRef.current < text.length) {
-        // When catching up, type multiple characters at once for smooth experience
-        const charsToAdd = shouldCatchUp ? Math.min(3, charsBehind) : 1;
-        const newIndex = Math.min(indexRef.current + charsToAdd, text.length);
-        const newText = text.substring(0, newIndex);
+        const newText = text.substring(0, indexRef.current + 1);
         setDisplayedText(newText);
-        indexRef.current = newIndex;
-        lastTextRef.current = newText;
+        indexRef.current += 1;
+        lastTextLengthRef.current = newText.length;
         
-        // Use variable speed - faster when catching up
-        const currentChar = text[newIndex - 1];
-        let charSpeed = shouldCatchUp ? speed * 0.2 : speed;
-        
+        // Use variable speed - faster for spaces, slower for punctuation
+        const currentChar = text[indexRef.current - 1];
+        let charSpeed = speed;
         if (currentChar === ' ' || currentChar === '\n') {
-          charSpeed = charSpeed * 0.5; // Faster for spaces/newlines
+          charSpeed = speed * 0.5; // Faster for spaces/newlines
         } else if (currentChar === '.' || currentChar === '!' || currentChar === '?') {
-          charSpeed = charSpeed * 2; // Slower for sentence endings
+          charSpeed = speed * 2; // Slower for sentence endings
         } else if (currentChar === ',' || currentChar === ';') {
-          charSpeed = charSpeed * 1.5; // Slightly slower for commas
+          charSpeed = speed * 1.5; // Slightly slower for commas
         }
         
         timeoutRef.current = setTimeout(typeNext, charSpeed);
       } else {
-        // Reached end of current text
-        lastTextRef.current = text;
+        // Reached end of current text, but more might come
+        lastTextLengthRef.current = text.length;
         timeoutRef.current = null;
       }
     };
 
-    // Start typing if we have new text to display and not already typing
-    if (text.length > indexRef.current && !timeoutRef.current) {
+    // Start typing immediately if we have new text to display
+    if (text.length > indexRef.current) {
       typeNext();
     }
 
@@ -100,21 +88,21 @@ export default function TypewriterText({ text = '', speed = 15, enabled = true, 
         timeoutRef.current = null;
       }
     };
-  }, [text, enabled, speed, isStreaming]);
+  }, [text, enabled, speed]);
 
-  // Show cursor when actively streaming or when typewriter is still catching up
-  const showCursor = (isStreaming && enabled) || (enabled && displayedText.length < text.length);
+  // Show cursor when streaming
+  const isStreaming = enabled && displayedText.length < text.length;
 
   // If children is a function, call it with displayedText
   if (typeof children === 'function') {
-    return children(displayedText, showCursor);
+    return children(displayedText, isStreaming);
   }
 
   // Otherwise, render the text directly
   return (
     <span>
       {displayedText}
-      {showCursor && (
+      {isStreaming && (
         <span className="inline-block w-0.5 h-4 bg-blue-600 ml-0.5 animate-pulse align-middle" />
       )}
     </span>

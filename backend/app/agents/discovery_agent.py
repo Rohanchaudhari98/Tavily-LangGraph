@@ -20,11 +20,7 @@ class CompetitorDiscoveryAgent:
     
     def __init__(self, tavily_api_key: str, openai_api_key: str):
         self.tavily_client = TavilyClient(api_key=tavily_api_key)
-        self.openai_client = OpenAI(
-            api_key=openai_api_key,
-            timeout=60.0,  # 1 minute timeout for discovery
-            max_retries=3
-        )
+        self.openai_client = OpenAI(api_key=openai_api_key)
         self.name = "competitor_discovery"
     
     async def execute(self, state: Dict) -> Dict:
